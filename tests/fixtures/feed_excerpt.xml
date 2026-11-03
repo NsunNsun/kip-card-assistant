@@ -1,0 +1,512 @@
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
+<yml_catalog date="2026-11-03T08:10:26+03:00">
+<script/>
+<script id="injected-by-browser-extension" src="chrome-extension://example/inject.js"/>
+<shop>
+<name>СОЮЗ-ПРИБОР</name>
+<company>СОЮЗ-ПРИБОР</company>
+<url>https://www.souz-pribor.ru</url>
+<categories>
+<category id="321">Оборудование для промышленной автоматизации</category>
+<category id="322" parentId="321">Измерители-регуляторы</category>
+<category id="323" parentId="321">Программные контроллеры</category>
+<category id="325" parentId="321">Таймеры, счетчики импульсов, тахометры</category>
+<category id="326" parentId="321">Сигнализаторы и регуляторы уровня</category>
+<category id="327" parentId="321">Измерители параметров электрической сети</category>
+<category id="328" parentId="321">Безбумажные самописцы, регистраторы</category>
+<category id="329" parentId="321">Промышленные блоки питания на DIN-рейку</category>
+<category id="331" parentId="321">Блоки коммутации (силовые блоки)</category>
+<category id="332" parentId="321">Устройства контроля и защиты</category>
+<category id="333" parentId="321">Запорно-регулирующая арматура</category>
+<category id="334" parentId="321">Термопреобразователи сопротивления (ТСМ, ТСП)</category>
+<category id="335" parentId="321">Термоэлектрические преобразователи (термопары)</category>
+<category id="336" parentId="321">Арматура для термопреобразователей</category>
+<category id="338" parentId="321">Нормирующие преобразователи</category>
+<category id="339" parentId="321">Преобразователи (датчики) давления</category>
+<category id="340" parentId="321">Бесконтактные датчики</category>
+<category id="341" parentId="321">Твердотельные реле</category>
+<category id="343" parentId="321">Программируемые реле</category>
+<category id="344" parentId="321">Программируемые логические контроллеры (ПЛК)</category>
+<category id="345" parentId="321">Модули ввода-вывода</category>
+<category id="346" parentId="321">Панели оператора HMI</category>
+<category id="347" parentId="321">Программное обеспечение</category>
+<category id="348" parentId="321">Устройства связи и калибраторы</category>
+<category id="349" parentId="321">Преобразователи частоты</category>
+<category id="351" parentId="321">Автоматика для котельных, ГВС, отопления, и вентиляции</category>
+<category id="352" parentId="321">Запальные устройства</category>
+<category id="353" parentId="321">Приборы контроля пламени и управления розжигом</category>
+<category id="354" parentId="321">Механизмы исполнительные и устройства управления</category>
+<category id="357" parentId="321">Комплектующие для шкафов и щитов</category>
+<category id="358">Теплотехнические приборы, газоанализаторы, счетчики</category>
+<category id="359" parentId="358">Термометры биметаллические</category>
+<category id="367" parentId="358">Гигрометры и психрометры</category>
+<category id="369" parentId="358">Манометры показывающие</category>
+<category id="370" parentId="358">Манометры коррозионностойкие</category>
+<category id="371" parentId="358">Манометры виброустойчивые</category>
+<category id="372" parentId="358">Манометры электроконтактные сигнализирующие</category>
+<category id="373" parentId="358">Манометры для точных измерений</category>
+<category id="374" parentId="358">Манометры образцовые</category>
+<category id="377" parentId="358">Манометры цифровые</category>
+<category id="379" parentId="358">Дифманометры</category>
+<category id="386" parentId="358">рН-метры</category>
+<category id="387" parentId="358">Кондуктометры и концентратомеры</category>
+<category id="388" parentId="358">Анализаторы растворенного кислорода</category>
+<category id="389" parentId="358">Анализаторы растворенного водорода</category>
+<category id="390" parentId="358">Газоанализаторы переносные</category>
+<category id="391" parentId="358">Газоанализаторы стационарные</category>
+<category id="392" parentId="358">Сигнализаторы загазованности</category>
+<category id="393" parentId="358">Счетчики воды тахометрические</category>
+<category id="394" parentId="358">Счетчики воды электромагнитные</category>
+<category id="395" parentId="358">Ультразвуковые расходомеры</category>
+<category id="397">Неразрушающий контроль и техническая диагностика</category>
+<category id="398" parentId="397">Эмиссионные спектрометры</category>
+<category id="399" parentId="397">Рентгенофлуоресцентные анализаторы</category>
+<category id="400" parentId="397">Лазерные анализаторы металлов</category>
+<category id="401" parentId="397">Твердомеры стационарные</category>
+<category id="402" parentId="397">Твердомеры портативные</category>
+<category id="403" parentId="397">Твердомеры лакокрасочных покрытий</category>
+<category id="404" parentId="397">Дефектоскопы</category>
+<category id="405" parentId="397">Толщиномеры ультразвуковые</category>
+<category id="406" parentId="397">Толщиномеры защитных покрытий</category>
+<category id="407" parentId="397">Вискозиметры</category>
+<category id="408" parentId="397">Адгезиметры</category>
+<category id="409" parentId="397">Виброметры</category>
+<category id="410" parentId="397">Профилометры (измерители шероховатости)</category>
+<category id="411" parentId="397">Влагомеры древесины и строительных материалов</category>
+<category id="412" parentId="433">Тахометры и стробоскопы</category>
+<category id="413" parentId="397">Секундомеры</category>
+<category id="414" parentId="397">Дальномеры лазерные и ультразвуковые</category>
+<category id="415" parentId="397">Видеоскопы</category>
+<category id="416" parentId="397">Нивелиры</category>
+<category id="417" parentId="397">Микроскопы</category>
+<category id="419" parentId="397">Оборудование для пробоподготовки</category>
+<category id="422">Экологический контроль и аттестация рабочих мест</category>
+<category id="423" parentId="422">Универсальные измерители параметров воздушной среды (метеометры)</category>
+<category id="424" parentId="422">Анемометры (измерители скорости воздушного потока)</category>
+<category id="425" parentId="422">Люксметры, яркомеры, УФ-радиометры, пульсметры</category>
+<category id="426" parentId="422">Измерители шума и вибрации</category>
+<category id="427" parentId="422">Счетчики частиц пыли</category>
+<category id="428" parentId="422">Измерители давления воздушного потока</category>
+<category id="429" parentId="422">Барометры</category>
+<category id="430" parentId="422">Измерители электромагнитных полей и излучений</category>
+<category id="431" parentId="422">Дозиметры (измерители радиационного фона)</category>
+<category id="433">Приборы для электротехнических лабораторий и энергоаудита</category>
+<category id="434" parentId="433">Тепловизоры промышленные и для энергоаудита</category>
+<category id="435" parentId="433">Аксессуары для тепловизоров</category>
+<category id="436" parentId="433">Пирометры (инфракрасные термометры)</category>
+<category id="437" parentId="433">Измерители температуры и влажности портативные (термогигрометры)</category>
+<category id="438" parentId="433">Зонды и аксессуары к термометрам и пирометрам</category>
+<category id="439" parentId="433">Измерители-регистраторы (логгеры) температуры и влажности</category>
+<category id="442" parentId="433">Анализаторы качества электроэнергии</category>
+<category id="443" parentId="433">Микроомметры, миллиомметры, омметры</category>
+<category id="444" parentId="433">Измерители сопротивления изоляции</category>
+<category id="445" parentId="433">Измерители параметров петли короткого замыкания и петли фаза-нуль</category>
+<category id="446" parentId="433">Измерители сопротивления заземления</category>
+<category id="447" parentId="433">Измерители параметров устройств защитного отключения</category>
+<category id="448" parentId="433">Многофункциональные измерители параметров электробезопасности</category>
+<category id="449" parentId="433">Виброметры-анализаторы</category>
+<category id="450" parentId="433">Измерители неоднородности линий (рефлектометры)</category>
+<category id="451" parentId="433">Приборы для трассировки и поиска повреждений подземных коммуникаций</category>
+<category id="452" parentId="433">Приборы для поиска скрытой проводки</category>
+<category id="453" parentId="433">Указатели напряжения и индикаторы чередования фаз</category>
+<category id="454" parentId="433">Вольтамперфазометры</category>
+<category id="455" parentId="433">Приборы для поиска мест электрических разрядов и утечек</category>
+<category id="456" parentId="433">Испытания автоматических выключателей</category>
+<category id="457" parentId="433">Проверка релейных защит и автоматики (устройства для испытания РЗА)</category>
+<category id="459" parentId="433">Контроль высоковольтных выключателей</category>
+<category id="460" parentId="433">Анализ и контроль элегаза</category>
+<category id="461" parentId="433">Испытание кабеля из сшитого полиэтилена (СНЧ установки)</category>
+<category id="462" parentId="433">Установки для испытания электрической прочности изоляции</category>
+<category id="463" parentId="433">Измерители параметров высоковольтной изоляции</category>
+<category id="464" parentId="433">Испытания изоляции защитных средств</category>
+<category id="465" parentId="433">Контроль силовых трансформаторов</category>
+<category id="466" parentId="433">Испытания трансформаторного масла</category>
+<category id="467" parentId="433">Тестеры аккумуляторных батарей</category>
+<category id="468">Электрорадиоизмерительные приборы</category>
+<category id="469" parentId="468">Осциллографы</category>
+<category id="470" parentId="468">Опции и аксессуары к осциллографам</category>
+<category id="471" parentId="468">Логические анализаторы</category>
+<category id="472" parentId="468">Анализаторы спектра</category>
+<category id="473" parentId="468">Анализаторы цепей</category>
+<category id="474" parentId="468">Испытания на ЭМС</category>
+<category id="475" parentId="468">Генераторы сигналов низкочастотные</category>
+<category id="476" parentId="468">Генераторы сигналов высокочастотные</category>
+<category id="477" parentId="468">Генераторы сигналов специальной формы</category>
+<category id="478" parentId="468">Генераторы импульсов</category>
+<category id="479" parentId="468">Частотомеры</category>
+<category id="480" parentId="468">Стандарты частоты</category>
+<category id="481" parentId="468">Вольтметры универсальные</category>
+<category id="482" parentId="468">Цифровые портативные мультиметры</category>
+<category id="483" parentId="468">Электроизмерительные клещи</category>
+<category id="484" parentId="468">Измерители иммитанса (RLC параметров)</category>
+<category id="485" parentId="468">Измерители мощности</category>
+<category id="486" parentId="468">Источники-измерители</category>
+<category id="487" parentId="468">Источники питания постоянного тока линейные</category>
+<category id="488" parentId="468">Источники питания постоянного тока импульсные</category>
+<category id="489" parentId="468">Источники питания переменного тока</category>
+<category id="490" parentId="468">Электронные нагрузки</category>
+<category id="491" parentId="468">Амплитудные усилители</category>
+<category id="492" parentId="468">Лабораторные калибраторы электротехнических величин</category>
+<category id="493" parentId="468">Лабораторные калибраторы температуры</category>
+<category id="494" parentId="433">Портативные калибраторы давления</category>
+<category id="495" parentId="468">Магазины и мосты сопротивлений</category>
+<category id="497" parentId="468">Лабораторные автотрансформаторы</category>
+<category id="498">Паяльное и радиомонтажное оборудование</category>
+<category id="499" parentId="498">Паяльные станции и паяльники</category>
+<category id="500" parentId="498">Сменные наконечники для паяльников</category>
+<category id="501" parentId="498">Демонтажное оборудование</category>
+<category id="502" parentId="498">Термовоздушные станции</category>
+<category id="503" parentId="498">Ремонтные станции</category>
+<category id="504" parentId="498">Паяльные ванны</category>
+<category id="505" parentId="498">Термостолы</category>
+<category id="506" parentId="498">Устройства термозачистки проводов</category>
+<category id="507" parentId="498">Аксессуары к паяльному оборудованию</category>
+<category id="509" parentId="498">Радиомонтажный инструмент</category>
+<category id="510">Промышленная мебель и антистатическое оснащение</category>
+<category id="511" parentId="510">Столы</category>
+<category id="512" parentId="510">Столы подкатные</category>
+<category id="513" parentId="510">Тумбы</category>
+<category id="514" parentId="510">Стойки, стеллажи, шкафы</category>
+<category id="515" parentId="510">Аксессуары к промышленной мебели</category>
+<category id="516" parentId="510">Антистатические стулья и кресла</category>
+<category id="517" parentId="510">Светильники бестеневые</category>
+<category id="518" parentId="510">Антистатическая одежда и обувь</category>
+<category id="519" parentId="510">Средства заземления персонала и посетителей</category>
+<category id="520" parentId="510">Приборы ESD-мониторинга и аудита</category>
+<category id="521" parentId="510">Ионизаторы воздуха</category>
+<category id="522" parentId="510">Дымоуловители</category>
+<category id="523" parentId="510">Антистатическая тара</category>
+<category id="524" parentId="510">Антистатические напольные покрытия</category>
+<category id="525">Испытательное оборудование</category>
+<category id="537" parentId="525">Машины для испытания пружин на растяжение и сжатие</category>
+<category id="538" parentId="525">Разрывные машины</category>
+<category id="576" parentId="433">Опции и аксессуары к измерителям параметров электробезопасности</category>
+<category id="580" parentId="468">Измерители параметров безопасности электрооборудования</category>
+<category id="582" parentId="397">Стандартные образцы</category>
+<category id="583" parentId="433">Портативные калибраторы процессов</category>
+<category id="584" parentId="433">Портативные калибраторы температуры</category>
+<category id="586" parentId="321">Измерители, регуляторы температуры и влажности</category>
+<category id="588" parentId="433">Поверочные установки и эталоны для электросчётчиков</category>
+<category id="589" parentId="397">Контроль качества строительных материалов</category>
+<category id="594" parentId="321">Монтажные щиты</category>
+<category id="595" parentId="321">Вакуумметры цифровые</category>
+<category id="596" parentId="422">Зонды и аксессуары к измерителям параметров воздушной среды</category>
+<category id="600" parentId="358">Опции и аксессуары для манометров и термометров</category>
+<category id="601" parentId="358">Опции и аксессуары для ультразвуковых уровнемеров</category>
+<category id="603" parentId="321">Комплектующие для преобразователей давления</category>
+<category id="604" parentId="468">Опции и аксессуары для измерителей мощности</category>
+<category id="605" parentId="468">Опции и аксессуары для электроизмерительных клещей</category>
+<category id="606" parentId="358">Счетчики тепла</category>
+<category id="608" parentId="358">Опции и аксессуары для счетчиков воды и тепла</category>
+<category id="609" parentId="468">Опции и аксессуары для источников питания</category>
+<category id="610" parentId="468">Опции и аксессуары для частотомеров</category>
+<category id="611" parentId="468">Опции и аксессуары для вольтметров</category>
+<category id="615" parentId="510">Шкафы сухого хранения</category>
+<category id="616" parentId="510">Аксессуары к шкафам сухого хранения</category>
+<category id="620" parentId="321">Датчики-реле температуры, термостаты</category>
+<category id="621" parentId="321">Датчики-реле давления</category>
+<category id="625" parentId="321">Энкодеры и шаговый привод</category>
+<category id="632" parentId="468">Опции для высокочастотных генераторов сигналов</category>
+<category id="634" parentId="321">Сенсорные панельные контроллеры</category>
+<category id="635" parentId="433">Аппараты испытания диэлектриков</category>
+<category id="636" parentId="397">Преобразователи для толщиномеров</category>
+<category id="637" parentId="397">Динамометры</category>
+<category id="640" parentId="321">Датчики влажности и температуры воздуха</category>
+<category id="641" parentId="321">Датчики уровня</category>
+<category id="645" parentId="397">Теодолиты</category>
+<category id="652" parentId="321">Промежуточные реле</category>
+<category id="655" parentId="321">Устройства плавного пуска</category>
+<category id="656" parentId="525">Вибростенды для испытаний</category>
+<category id="657" parentId="525">Испытательные камеры</category>
+<category id="658" parentId="321">Пневматическое оборудование</category>
+<category id="892" parentId="358">Опции и аксессуары для газоанализаторов</category>
+<category id="894" parentId="397">Блескомеры</category>
+<category id="895" parentId="397">Электроды для электроискровых дефектоскопов</category>
+<category id="896" parentId="397">Наборы для визуально-измерительного контроля </category>
+<category id="897" parentId="397">Преобразователи для вихретоковых дефектоскопов</category>
+<category id="901" parentId="468">Аксессуары для ЛАТРов</category>
+<category id="913" parentId="397">Измерители теплопроводности</category>
+<category id="914" parentId="397">Ручной инструмент</category>
+<category id="915" parentId="433">Передвижные электролаборатории ЭТЛ</category>
+<category id="921" parentId="321">Автоматические выключатели и устройства защиты</category>
+<category id="922" parentId="321">Промышленные коммутаторы</category>
+<category id="923" parentId="321">Оптоэлектронные датчики</category>
+<category id="924" parentId="321">Серводвигатели и сервоприводы</category>
+<category id="926" parentId="525">Стенды механических испытаний</category>
+<category id="929" parentId="321">Контроллеры управления насосными станциями</category>
+<category id="930" parentId="321">Пневмораспределители</category>
+<category id="931" parentId="321">Регистраторы технологических процессов безбумажные</category>
+<category id="932" parentId="433">Оптические рефлектометры (OTDR)</category>
+<category id="933" parentId="321">Промышленные компьютеры</category>
+<category id="934" parentId="397">Вихретоковые дефектоскопы</category>
+<category id="935" parentId="397">Измерители прочности бетона</category>
+<category id="936" parentId="397">Измерители защитного слоя бетона</category>
+<category id="938" parentId="397">Пикнометр</category>
+<category id="939" parentId="397">Гриндометр</category>
+<category id="942" parentId="397">Оборудование для лицензии МЧС</category>
+<category id="943" parentId="321">Блоки питания на DIN-рейку</category>
+</categories>
+<offers>
+<offer id="54079" available="true">
+<name>МК110-224.8Д.4Р [М01]</name>
+<typePrefix>комбинированный модуль ввода/вывода дискретных сигналов</typePrefix>
+<url>https://www.souz-pribor.ru/product/mk110-8d-4r/</url>
+<categoryId>345</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>58953</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/4e8/e2zaz363p275vnb1rrqilm9u0j9sbzez/IMG_7719.jpg</picture>
+<price>12993</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">58953</param>
+<param name="Код товара">63483</param>
+</offer>
+<offer id="54084" available="true" group_id="7826">
+<name>ПМ01-24.АВ</name>
+<typePrefix>GSM-модем</typePrefix>
+<url>https://www.souz-pribor.ru/product/pm01/</url>
+<categoryId>348</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>39432</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/0f8/0f817be3d522ac366aecbef3dacbbf02.jpg</picture>
+<price>7778</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">39432</param>
+<param name="Код товара">73534</param>
+</offer>
+<offer id="54086" available="true" group_id="7826">
+<name>ПМ01-220.АВ</name>
+<typePrefix>GSM-модем</typePrefix>
+<url>https://www.souz-pribor.ru/product/pm01/</url>
+<categoryId>348</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>39431</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/0f8/0f817be3d522ac366aecbef3dacbbf02.jpg</picture>
+<price>7778</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">39431</param>
+<param name="Код товара">73532</param>
+</offer>
+<offer id="54087" available="true" group_id="7827">
+<name>АНТ-1</name>
+<typePrefix>антенна для GSM-модема</typePrefix>
+<url>https://www.souz-pribor.ru/product/ant/</url>
+<categoryId>348</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>30548</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/0a0/0a046d035b8c3cbbb1bf69d240629364.jpg</picture>
+<price>900</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">30548</param>
+<param name="Код товара">15060</param>
+</offer>
+<offer id="54088" available="true" group_id="7827">
+<name>АНТ-2</name>
+<typePrefix>антенна для GSM-модема</typePrefix>
+<url>https://www.souz-pribor.ru/product/ant/</url>
+<categoryId>348</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>30554</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/0a0/0a046d035b8c3cbbb1bf69d240629364.jpg</picture>
+<price>1220</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">30554</param>
+<param name="Код товара">15061</param>
+</offer>
+<offer id="54089" available="true" group_id="7827">
+<name>АНТ-3</name>
+<typePrefix>антенна для GSM-модема</typePrefix>
+<url>https://www.souz-pribor.ru/product/ant/</url>
+<categoryId>348</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>30549</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/0a0/0a046d035b8c3cbbb1bf69d240629364.jpg</picture>
+<price>1220</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">30549</param>
+<param name="Код товара">15062</param>
+</offer>
+<offer id="54090" available="true" group_id="7827">
+<name>АНТ-4</name>
+<typePrefix>антенна для GSM-модема</typePrefix>
+<url>https://www.souz-pribor.ru/product/ant/</url>
+<categoryId>348</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>31329</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/0a0/0a046d035b8c3cbbb1bf69d240629364.jpg</picture>
+<price>1769</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">31329</param>
+<param name="Код товара">15063</param>
+</offer>
+<offer id="54091" available="true" group_id="7827">
+<name>АНТ-5</name>
+<typePrefix>антенна для GSM-модема</typePrefix>
+<url>https://www.souz-pribor.ru/product/ant/</url>
+<categoryId>348</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>31330</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/0a0/0a046d035b8c3cbbb1bf69d240629364.jpg</picture>
+<price>1769</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">31330</param>
+<param name="Код товара">15064</param>
+</offer>
+<offer id="54112" available="true" group_id="7857">
+<name>БП14Б-Д4.2-24</name>
+<typePrefix>блок питания 2-х или 4-х канальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp14b-d4/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70363</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f35/ja1x2q3jdtlt90ikzefbj3a9ie9o23ru/31.jpg</picture>
+<price>6832</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70363</param>
+<param name="Код товара">16513</param>
+</offer>
+<offer id="54113" available="true" group_id="7857">
+<name>БП14Б-Д4.4-24</name>
+<typePrefix>блок питания 2-х или 4-х канальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp14b-d4/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70365</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f35/ja1x2q3jdtlt90ikzefbj3a9ie9o23ru/31.jpg</picture>
+<price>6832</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70365</param>
+<param name="Код товара">16515</param>
+</offer>
+<offer id="54114" available="true" group_id="7857">
+<name>БП14Б-Д4.2-36</name>
+<typePrefix>блок питания 2-х или 4-х канальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp14b-d4/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70364</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f35/ja1x2q3jdtlt90ikzefbj3a9ie9o23ru/31.jpg</picture>
+<price>6832</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70364</param>
+<param name="Код товара">16514</param>
+</offer>
+<offer id="54115" available="true" group_id="7857">
+<name>БП14Б-Д4.4-36</name>
+<typePrefix>блок питания 2-х или 4-х канальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp14b-d4/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70366</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f35/ja1x2q3jdtlt90ikzefbj3a9ie9o23ru/31.jpg</picture>
+<price>6832</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70366</param>
+<param name="Код товара">16516</param>
+</offer>
+<offer id="54116" available="true" group_id="7858">
+<name>БП15Б-Д2-5</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70367</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4575</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70367</param>
+<param name="Код товара">16523</param>
+</offer>
+<offer id="54117" available="true" group_id="7858">
+<name>БП15Б-Д2-9</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70368</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4575</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70368</param>
+<param name="Код товара">16525</param>
+</offer>
+<offer id="54118" available="true" group_id="7858">
+<name>БП15Б-Д2-12</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>96441</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4453</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">96441</param>
+<param name="Код товара">93434</param>
+</offer>
+<offer id="54119" available="true" group_id="7858">
+<name>БП15Б-Д2-15</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70370</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4575</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70370</param>
+<param name="Код товара">16519</param>
+</offer>
+<offer id="54120" available="true" group_id="7858">
+<name>БП15Б-Д2-48</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70373</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4575</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70373</param>
+<param name="Код товара">16522</param>
+</offer>
+<offer id="54121" available="true" group_id="7858">
+<name>БП15Б-Д2-60</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70374</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4575</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70374</param>
+<param name="Код товара">16524</param>
+</offer>
+<offer id="58726" available="true" group_id="7858">
+<name>БП15Б-Д2-24</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>96440</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4453</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">96440</param>
+<param name="Код товара">93435</param>
+</offer>
+<offer id="58727" available="true" group_id="7858">
+<name>БП15Б-Д2-36</name>
+<typePrefix>блок питания одноканальный</typePrefix>
+<url>https://www.souz-pribor.ru/product/bp15b-d2/</url>
+<categoryId>329</categoryId>
+<vendor>ОВЕН</vendor>
+<vendorCode>70372</vendorCode>
+<picture>https://www.souz-pribor.ru/upload/iblock/f0e/10vdef6057kl6lwwr6umtn5hv56lippd/IMG_7444_.jpg</picture>
+<price>4575</price>
+<currencyId>RUR</currencyId>
+<param name="Артикул">70372</param>
+<param name="Код товара">16521</param>
+</offer>
+</offers>
+</shop>
+</yml_catalog>

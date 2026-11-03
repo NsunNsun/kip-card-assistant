@@ -1,0 +1,31 @@
+# Облако (OpenRouter):           docker compose up --build
+# Замкнутый контур (Ollama):      docker compose --profile local up --build
+#   и в .env: LLM_BASE_URL=http://ollama:11434/v1, LLM_MODEL=qwen2.5:14b-instruct
+#   модель скачать один раз:      docker compose exec ollama ollama pull qwen2.5:14b-instruct
+
+services:
+  app:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["local"]
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    # Для GPU (NVIDIA Container Toolkit) раскомментируйте:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama:
