@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Карточки КИП</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1c2430; --muted: #5f6b7a; --line: #dde2e8;
+    --accent: #1f5fbf; --accent-text: #ffffff; --warn-bg: #fff6e0; --warn-line: #e9b949;
+    --ok-bg: #e7f6ec; --ok-text: #1d6b3a; --err-bg: #fdecec; --err-text: #9b1c1c; --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181d; --panel: #1c2128; --text: #e6e9ee; --muted: #9aa5b3; --line: #2e3640;
+      --accent: #5b9bff; --accent-text: #0d1117; --warn-bg: #3a2f12; --warn-line: #a7832a;
+      --ok-bg: #163322; --ok-text: #7fd8a0; --err-bg: #3b1a1a; --err-text: #f2a3a3; --code: #232a33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: minmax(320px, 440px) 1fr; gap: 20px; padding: 20px 24px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+  h2 { font-size: 15px; margin: 0 0 12px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+                    background: var(--bg); color: var(--text); font: inherit; }
+  textarea { resize: vertical; }
+  textarea.mono { font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: transparent; color: var(--muted); padding: 5px 12px;
+         border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
+  .tab.active { background: var(--code); color: var(--text); border-color: var(--muted); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  button.primary, button.secondary { padding: 9px 16px; border-radius: 6px; font: inherit; cursor: pointer; border: 1px solid var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-text); }
+  button.secondary { background: transparent; color: var(--accent); }
+  button:disabled { opacity: .55; cursor: progress; }
+  .examples { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .examples button { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0 6px 0 0; font: inherit; text-decoration: underline; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+  .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
+  .badge.review { background: var(--warn-bg); color: var(--text); border: 1px solid var(--warn-line); }
+  .alert { border-left: 3px solid var(--warn-line); background: var(--warn-bg); padding: 10px 12px; border-radius: 4px; margin: 10px 0; font-size: 14px; }
+  .alert.error { border-color: var(--err-text); background: var(--err-bg); }
+  .alert ul { margin: 4px 0 0; padding-left: 18px; }
+  .block { border-top: 1px solid var(--line); padding: 12px 0; }
+  .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .block-head h3 { margin: 0; font-size: 14px; }
+  .count { font-size: 12px; color: var(--muted); }
+  .count.bad { color: var(--err-text); }
+  .copy { font-size: 12px; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 8px; cursor: pointer; }
+  .text { white-space: pre-wrap; margin: 6px 0 0; }
+  table { border-collapse: collapse; width: 100%; margin-top: 6px; font-size: 14px; }
+  td { border-bottom: 1px solid var(--line); padding: 5px 8px 5px 0; vertical-align: top; }
+  td:first-child { color: var(--muted); width: 42%; }
+  td.nodata { font-weight: 600; color: var(--err-text); }
+  ol, ul.plain { margin: 6px 0 0; padding-left: 20px; }
+  pre { background: var(--code); padding: 12px; border-radius: 6px; overflow: auto; font-size: 12.5px; max-height: 70vh; }
+  .meta { font-size: 12px; color: var(--muted); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Черновик карточки товара КИП</h1>
+  <p>Тексты пишет модель, характеристики берутся только из ваших данных. Отсутствующее помечается «данных нет».</p>
+</header>
+<main>
+  <section>
+    <h2>Данные о товаре</h2>
+    <div class="examples" id="examples"></div>
+    <div class="tabs">
+      <button class="tab active" data-input="form">Форма</button>
+      <button class="tab" data-input="json">JSON</button>
+    </div>
+
+    <div id="input-form">
+      <label for="f-name">Название *</label>
+      <input id="f-name" placeholder="Манометр показывающий DM 02">
+      <label for="f-manufacturer">Производитель</label>
+      <input id="f-manufacturer" placeholder="Манотомь">
+      <label for="f-type">Тип прибора</label>
+      <input id="f-type" placeholder="манометр показывающий">
+      <label for="f-category">Категория каталога</label>
+      <input id="f-category" placeholder="Манометры показывающие">
+      <label for="f-specs">Характеристики — по одной в строке: «название: значение»</label>
+      <textarea id="f-specs" rows="7" class="mono" placeholder="Диапазон измерений: 0–1,6 МПа&#10;Класс точности: 1,5"></textarea>
+      <label for="f-description">Описание или фрагмент паспорта</label>
+      <textarea id="f-description" rows="6"></textarea>
+      <label for="f-url">Ссылка на источник (необязательно)</label>
+      <input id="f-url" placeholder="https://">
+    </div>
+
+    <div id="input-json" class="hidden">
+      <textarea id="json" rows="22" class="mono" spellcheck="false"></textarea>
+      <div class="hint">Поля: name, manufacturer, product_type, category, specs, description, source_url</div>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="btn-generate">Сгенерировать карточку</button>
+      <button class="secondary" id="btn-check">Проверить данные</button>
+    </div>
+    <div id="input-msg"></div>
+  </section>
+
+  <section>
+    <h2>Результат <span id="status"></span></h2>
+    <div class="tabs hidden" id="out-tabs">
+      <button class="tab active" data-out="card">Карточка</button>
+      <button class="tab" data-out="md">Markdown</button>
+      <button class="tab" data-out="json">JSON</button>
+    </div>
+    <div id="out-empty" class="empty">Заполните данные слева и нажмите «Сгенерировать карточку».<br>«Проверить данные» работает без модели и без затрат.</div>
+    <div id="out-card"></div>
+    <div id="out-md" class="hidden"><div class="row" style="margin:0 0 8px"><button class="copy" data-copy-target="md-pre">Копировать</button></div><pre id="md-pre"></pre></div>
+    <div id="out-json" class="hidden"><div class="row" style="margin:0 0 8px"><button class="copy" data-copy-target="json-pre">Копировать</button></div><pre id="json-pre"></pre></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let inputMode = "form";
+
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+document.querySelectorAll("[data-input]").forEach(btn => btn.onclick = () => {
+  if (btn.dataset.input === inputMode) return;
+  if (btn.dataset.input === "json") $("json").value = JSON.stringify(formToObject(), null, 2);
+  else { try { objectToForm(JSON.parse($("json").value || "{}")); } catch (e) { showInputMsg("error", "В поле JSON ошибка — исправьте перед переключением: " + e.message); return; } }
+  inputMode = btn.dataset.input;
+  document.querySelectorAll("[data-input]").forEach(b => b.classList.toggle("active", b === btn));
+  $("input-form").classList.toggle("hidden", inputMode !== "form");
+  $("input-json").classList.toggle("hidden", inputMode !== "json");
+});
+
+document.querySelectorAll("[data-out]").forEach(btn => btn.onclick = () => {
+  document.querySelectorAll("[data-out]").forEach(b => b.classList.toggle("active", b === btn));
+  ["card", "md", "json"].forEach(k => $("out-" + k).classList.toggle("hidden", k !== btn.dataset.out));
+});
+
+function formToObject() {
+  const specs = {};
+  $("f-specs").value.split("\n").forEach(line => {
+    const i = line.indexOf(":");
+    if (i > 0) specs[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+    else if (line.trim()) specs[line.trim()] = "";
+  });
+  return { name: $("f-name").value, manufacturer: $("f-manufacturer").value, product_type: $("f-type").value,
+           category: $("f-category").value, specs, description: $("f-description").value,
+           source_url: $("f-url").value, ...(extra.identifiers ? { identifiers: extra.identifiers } : {}) };
+}
+
+let extra = {};
+function objectToForm(o) {
+  extra = { identifiers: o.identifiers };
+  $("f-category").value = o.category || "";
+  $("f-name").value = o.name || ""; $("f-manufacturer").value = o.manufacturer || "";
+  $("f-type").value = o.product_type || ""; $("f-description").value = o.description || "";
+  $("f-url").value = o.source_url || "";
+  const specs = o.specs && typeof o.specs === "object" && !Array.isArray(o.specs) ? o.specs : {};
+  $("f-specs").value = Object.entries(specs).map(([k, v]) => `${k}: ${v ?? ""}`).join("\n");
+}
+
+function payload() { return inputMode === "json" ? $("json").value : JSON.stringify(formToObject()); }
+
+function showInputMsg(kind, html) { $("input-msg").innerHTML = html ? `<div class="alert ${kind === "error" ? "error" : ""}">${html}</div>` : ""; }
+
+function issuesHtml(issues) { return "<ul>" + issues.map(i => `<li>${esc(i.message)}</li>`).join("") + "</ul>"; }
+
+async function call(url) {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload() });
+  let data; try { data = await res.json(); } catch { data = { error: "Сервер вернул не JSON (" + res.status + ")" }; }
+  return { ok: res.ok, data };
+}
+
+$("btn-check").onclick = async () => {
+  showInputMsg();
+  const { ok, data } = await call("/api/check");
+  if (!ok) return showInputMsg("error", esc(data.error) + (data.issues ? issuesHtml(data.issues) : ""));
+  const notable = data.issues.filter(i => i.level !== "info");
+  showInputMsg(notable.length ? "warn" : "ok", notable.length
+    ? `<b>Тип прибора: ${esc(data.profile_title)}.</b> Замечания:${issuesHtml(data.issues)}`
+    : `<b>Тип прибора: ${esc(data.profile_title)}.</b> Замечаний нет — можно генерировать.`);
+};
+
+$("btn-generate").onclick = async () => {
+  const btn = $("btn-generate");
+  btn.disabled = true; btn.textContent = "Генерирую… (10–40 с)";
+  showInputMsg();
+  try {
+    const { ok, data } = await call("/api/generate");
+    if (!ok) { showInputMsg("error", esc(data.error) + (data.issues ? issuesHtml(data.issues) : "")); return; }
+    renderCard(data.card, data.markdown);
+  } catch (e) { showInputMsg("error", "Сервер недоступен: " + esc(e.message)); }
+  finally { btn.disabled = false; btn.textContent = "Сгенерировать карточку"; }
+};
+
+function block(title, count, copyText, body) {
+  const id = "c" + Math.random().toString(36).slice(2);
+  window.__copy = window.__copy || {}; window.__copy[id] = copyText;
+  return `<div class="block"><div class="block-head"><h3>${title} ${count || ""}</h3>
+          <button class="copy" data-copy="${id}">Копировать</button></div>${body}</div>`;
+}
+
+function renderCard(card, md) {
+  $("out-empty").classList.add("hidden"); $("out-tabs").classList.remove("hidden");
+  $("status").innerHTML = card.status === "ok" ? '<span class="badge ok">готово к вычитке</span>' : '<span class="badge review">требует проверки</span>';
+  const t = card.seo_title.length, d = card.seo_description.length;
+  const attention = card.issues.filter(i => i.level !== "info");
+  let html = `<div class="meta">${esc(card.product.name)} · ${esc(card.product.manufacturer || "")} · модель ${esc(card.meta.model)} · попыток: ${card.meta.attempts}</div>`;
+  if (attention.length || card.missing_fields.length) {
+    html += `<div class="alert"><b>Требует внимания</b>` +
+      (card.missing_fields.length ? `<div>Нет данных: ${esc(card.missing_fields.join(", "))}</div>` : "") +
+      issuesHtml(attention) + `</div>`;
+  }
+  html += block("SEO-заголовок", `<span class="count ${t > 70 ? "bad" : ""}">${t}/70</span>`, card.seo_title, `<p class="text">${esc(card.seo_title)}</p>`);
+  html += block("SEO-описание", `<span class="count ${d < 800 || d > 1200 ? "bad" : ""}">${d} симв.</span>`, card.seo_description, `<p class="text">${esc(card.seo_description)}</p>`);
+  const specsTsv = card.key_specs.map(r => `${r.name}\t${r.value}`).join("\n");
+  html += block("Ключевые характеристики", "", specsTsv, "<table>" + card.key_specs.map(r =>
+    `<tr><td>${esc(r.name)}</td><td class="${r.source === "missing" ? "nodata" : ""}">${esc(r.value)}</td></tr>`).join("") + "</table>");
+  html += block("Поисковые запросы", "", card.search_queries.join("\n"), "<ol>" + card.search_queries.map(q => `<li>${esc(q)}</li>`).join("") + "</ol>");
+  const c = card.commercial;
+  const commText = `${c.summary}\n\nКому подходит:\n- ${c.who_for.join("\n- ")}\n\nЗадачи:\n- ${c.tasks.join("\n- ")}`;
+  html += block("Для менеджера", "", commText, `<p class="text">${esc(c.summary)}</p><b>Кому подходит</b><ul class="plain">${c.who_for.map(x => `<li>${esc(x)}</li>`).join("")}</ul><b>Какие задачи решает</b><ul class="plain">${c.tasks.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`);
+  const notes = card.issues.filter(i => i.level === "info");
+  if (notes.length) html += `<div class="block"><h3>Заметки</h3>${issuesHtml(notes)}</div>`;
+  $("out-card").innerHTML = html;
+  $("md-pre").textContent = md;
+  $("json-pre").textContent = JSON.stringify(card, null, 2);
+}
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".copy"); if (!btn) return;
+  const text = btn.dataset.copy ? window.__copy[btn.dataset.copy] : $(btn.dataset.copyTarget).textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = "Скопировано"; }
+  catch { btn.textContent = "Не удалось"; }
+  setTimeout(() => btn.textContent = "Копировать", 1500);
+});
+
+fetch("/api/examples").then(r => r.json()).then(list => {
+  if (!list.length) return;
+  $("examples").innerHTML = "Примеры: " + list.map(n => `<button data-example="${esc(n)}">${esc(n)}</button>`).join("");
+  document.querySelectorAll("[data-example]").forEach(b => b.onclick = async () => {
+    const text = await (await fetch("/api/examples/" + encodeURIComponent(b.dataset.example))).text();
+    $("json").value = text;
+    try { objectToForm(JSON.parse(text)); } catch {}
+    showInputMsg();
+  });
+}).catch(() => {});
+</script>
+</body>
+</html>
