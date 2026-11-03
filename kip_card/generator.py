@@ -10,8 +10,8 @@ from pydantic import ValidationError
 from .factcheck import FactChecker
 from .llm import JSONModel, LLMError, LLMResponseError
 from .models import NO_DATA, Issue, LLMCopy, Meta, ProductCard, ProductInput, SpecRow
-from .prompts import SYSTEM_PROMPT, build_repair_prompt, build_user_prompt
-from .quality import evaluative_words, fix_title, irrelevant_queries
+from .prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_repair_prompt, build_user_prompt
+from .quality import evaluative_words, fix_title, generic_audience, irrelevant_queries
 from .validation import ValidationResult, parse_input
 
 log = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def _source_texts(product: ProductInput) -> list[str]:
 def _normalize(copy: LLMCopy, product: ProductInput) -> LLMCopy:
     queries: list[str] = []
     for q in copy.search_queries:
-        q = " ".join(q.split()).strip(" .")
+        q = " ".join(q.split()).strip(" .").lower()  # запросы набирают строчными
         if q and q.lower() not in {x.lower() for x in queries}:
             queries.append(q)
     return copy.model_copy(update={
@@ -41,8 +41,12 @@ def _normalize(copy: LLMCopy, product: ProductInput) -> LLMCopy:
     })
 
 
-def review(copy: LLMCopy, checker: FactChecker, product: ProductInput) -> list[str]:
-    """Детерминированные проверки ответа модели. Пустой список — всё в порядке."""
+def review(copy: LLMCopy, checker: FactChecker, product: ProductInput, sparse: bool = False) -> list[str]:
+    """Детерминированные проверки ответа модели. Пустой список — всё в порядке.
+
+    sparse — во входе мало данных: нижняя граница длины описания не требуется,
+    чтобы модель не добивала текст выдумками (короткий текст помечается предупреждением).
+    """
     problems: list[str] = []
     title_len = len(copy.seo_title)
     if title_len > TITLE_MAX:
@@ -50,12 +54,16 @@ def review(copy: LLMCopy, checker: FactChecker, product: ProductInput) -> list[s
     if not copy.seo_title:
         problems.append("seo_title пустой")
     desc_len = len(copy.seo_description)
-    if not DESCRIPTION_MIN <= desc_len <= DESCRIPTION_MAX:
+    if desc_len > DESCRIPTION_MAX or (desc_len < DESCRIPTION_MIN and not sparse):
         problems.append(f"seo_description: {desc_len} символов, нужно от {DESCRIPTION_MIN} до {DESCRIPTION_MAX}")
     if not QUERIES_MIN <= len(copy.search_queries) <= QUERIES_MAX:
         problems.append(f"search_queries: {len(copy.search_queries)} шт., нужно от {QUERIES_MIN} до {QUERIES_MAX}")
     if not copy.commercial.who_for or not copy.commercial.tasks:
         problems.append("commercial: заполни who_for и tasks")
+    roles = generic_audience(copy.commercial.who_for)
+    if roles:
+        problems.append("commercial.who_for: пункты из одних должностей, без объектов и сфер применения — "
+                        + "; ".join(f"«{r}»" for r in roles) + ". Укажи, где применяется этот прибор")
 
     fields = {
         "seo_title": copy.seo_title,
@@ -124,7 +132,7 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": build_user_prompt(product, result.missing_specs)},
+        {"role": "user", "content": build_user_prompt(product, result.missing_specs, result.sparse)},
     ]
 
     best: LLMCopy | None = None
@@ -137,7 +145,7 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
         try:
             data, raw_text = llm.generate(messages)
             copy = _normalize(LLMCopy.model_validate(data), product)
-            problems = review(copy, checker, product)
+            problems = review(copy, checker, product, result.sparse)
             # Запоминаем лучший корректный по схеме ответ (с наименьшим числом проблем).
             if best is None or len(problems) <= len(best_problems):
                 best, best_problems = copy, problems
@@ -165,7 +173,13 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
         copy = copy.model_copy(update={"seo_title": _truncate_title(copy.seo_title)})
         issues.append(Issue(level="warning", field="seo_title",
                             message=f"Заголовок был длиннее {TITLE_MAX} символов и обрезан по слову — проверьте"))
-    for problem in review(copy, checker, product):
+    if result.sparse and len(copy.seo_description) < DESCRIPTION_MIN:
+        issues.append(Issue(
+            level="warning", field="seo_description",
+            message=f"SEO-описание {len(copy.seo_description)} симв. — короче {DESCRIPTION_MIN}: во входных данных "
+                    "мало сведений, текст намеренно не добивался выдумками. Дополните описание "
+                    "(фрагмент паспорта) и сгенерируйте заново"))
+    for problem in review(copy, checker, product, result.sparse):
         field = problem.split(":", 1)[0] if ":" in problem else "output"
         issues.append(Issue(level="warning", field=field, message="Проверьте: " + problem))
     for gap in copy.data_gaps:
@@ -193,5 +207,6 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
             generated_at=datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
             attempts=attempts,
             response_format=getattr(llm, "mode", "unknown"),
+            prompt_version=PROMPT_VERSION,
         ),
     )

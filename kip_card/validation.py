@@ -17,6 +17,9 @@ from .models import Issue, ProductInput
 MAX_INPUT_CHARS = 60_000
 MAX_DESCRIPTION_CHARS = 8_000
 SHORT_DESCRIPTION_CHARS = 150
+# «Мало данных»: короткое описание и немного характеристик — честный короткий текст
+# важнее требования «800 символов» (см. docs/DECISIONS.md, раздел 10)
+SPARSE_MAX_SPECS = 8
 
 ALIASES = {
     "name": ("name", "title", "наименование", "название"),
@@ -45,6 +48,12 @@ class ValidationResult:
     missing_specs: list[str] = field(default_factory=list)  # ключевые характеристики, которых нет
     empty_specs: list[str] = field(default_factory=list)  # характеристики, переданные без значения
     profile: str = "generic"
+
+    @property
+    def sparse(self) -> bool:
+        """Данных слишком мало, чтобы написать 800+ символов без выдумок."""
+        return (len(self.product.description) < SHORT_DESCRIPTION_CHARS
+                and len(self.product.specs) < SPARSE_MAX_SPECS)
 
 
 # ---------------------------------------------------------------- профили приборов

@@ -1,6 +1,7 @@
-"""Проверки качества текста + регрессия на настоящих ответах модели из первого прогона.
+"""Проверки качества текста + регрессия на настоящих ответах модели.
 
-tests/fixtures/first_run/*.json — ответы openai/gpt-4o-mini с промптом версии 1.
+tests/fixtures/first_run/*.json  — ответы openai/gpt-4o-mini с промптом версии 1;
+tests/fixtures/second_run/*.json — с промптом версии 2.
 Ошибки в них нашли при ручной вычитке; эти тесты гарантируют, что код ловит их сам.
 """
 
@@ -14,12 +15,13 @@ from kip_card.factcheck import FactChecker
 from kip_card.generator import _normalize, _source_texts, generate_card, review
 from kip_card.models import LLMCopy, ProductInput
 from kip_card.prompts import SYSTEM_PROMPT
-from kip_card.quality import evaluative_words, fix_title, irrelevant_queries
+from kip_card.quality import evaluative_words, fix_title, generic_audience, irrelevant_queries
 from kip_card.validation import parse_input
 
 from .conftest import EXAMPLES, FakeLLM, make_copy
 
 FIRST_RUN = Path(__file__).parent / "fixtures" / "first_run"
+SECOND_RUN = Path(__file__).parent / "fixtures" / "second_run"
 
 
 def product(name="ПД100-ДИ1,6-111-0,5", manufacturer="ОВЕН", product_type="датчик давления"):
@@ -28,6 +30,7 @@ def product(name="ПД100-ДИ1,6-111-0,5", manufacturer="ОВЕН", product_typ
 
 @pytest.mark.parametrize("title, expected", [
     ("датчик давления ПД100 ОВЕН", "Датчик давления ПД100 ОВЕН"),
+    ("Пирометр testo 830-T1 Testo, -30 … +400 °C", "Пирометр testo 830-T1, -30 … +400 °C"),
     ("пирометр testo 830-T1; диапазон", "Пирометр testo 830-T1, диапазон"),
     ("testo 830-T1 пирометр", "testo 830-T1 пирометр"),  # написание производителя сохраняем
 ])
@@ -47,12 +50,12 @@ def test_evaluative_words_allowed_only_if_in_source():
     assert sorted(evaluative_words("Надёжный и идеальный прибор, самый точный", source)) == ["идеальный", "самый"]
 
 
-def _replay(stem):
+def _replay(stem, run=FIRST_RUN):
     raw = (EXAMPLES / f"{stem}.json").read_text(encoding="utf-8")
     result = parse_input(raw)
-    data = json.loads((FIRST_RUN / f"{stem}.json").read_text(encoding="utf-8"))
+    data = json.loads((run / f"{stem}.json").read_text(encoding="utf-8"))
     copy = _normalize(LLMCopy.model_validate(data), result.product)
-    return copy, review(copy, FactChecker(_source_texts(result.product)), result.product)
+    return copy, review(copy, FactChecker(_source_texts(result.product)), result.product, result.sparse)
 
 
 def test_first_run_pd100_leaked_query_is_caught():
@@ -65,7 +68,7 @@ def test_first_run_pd100_leaked_query_is_caught():
 
 def test_first_run_testo_title_and_words():
     copy, problems = _replay("testo-830-t1")
-    assert copy.seo_title == "Пирометр testo 830-T1 Testo, диапазон -30 … +400 °C"
+    assert copy.seo_title == "Пирометр testo 830-T1, диапазон -30 … +400 °C"
     assert any("идеальным" in p for p in problems)
 
 
@@ -103,3 +106,46 @@ def test_system_prompt_has_no_concrete_products():
         assert word not in lowered, word
     examples_with_digits = [m for m in re.findall(r"«[^»]*\d[^»]*»", SYSTEM_PROMPT) if m != "«№1»"]
     assert examples_with_digits == [], "в примерах промпта не должно быть конкретных значений"
+
+
+def test_generic_audience():
+    items = ["технические специалисты", "снабженцы", "инженеры КИПиА", "инженеры на производстве",
+             "службы водоснабжения", "специалисты по энергоаудиту", "котельные"]
+    assert generic_audience(items) == ["технические специалисты", "снабженцы", "инженеры КИПиА"]
+
+
+def test_second_run_testo_is_fixed_and_roles_caught():
+    copy, problems = _replay("testo-830-t1", SECOND_RUN)
+    assert copy.seo_title == "Пирометр testo 830-T1, -30 … +400 °C"
+    assert all(q == q.lower() for q in copy.search_queries)
+    assert any("технические специалисты" in p and "снабженцы" in p for p in problems)
+
+
+def test_second_run_pd100_is_clean():
+    copy, problems = _replay("owen-pd100-di1.6-111-0.5", SECOND_RUN)
+    assert problems == []
+    assert "пд100-ди1,6-111-0,5 купить" in copy.search_queries
+
+
+def test_sparse_input_does_not_demand_800_chars(manometer_raw):
+    result = parse_input(manometer_raw)
+    assert result.sparse
+    short = make_copy(title="Манометр показывающий DM 02 Манотомь, 0–1,6 МПа",
+                      description="Манометр показывающий DM 02 измеряет избыточное давление в диапазоне 0–1,6 МПа.",
+                      queries=["манометр dm 02", "манометр dm 02 купить", "манометр манотомь"],
+                      who_for=["системы, где контролируют избыточное давление"],
+                      tasks=["измерение избыточного давления"])
+    llm = FakeLLM(short)
+    card = generate_card(result, llm)
+    assert card.meta.attempts == 1  # короткий текст не отправлялся «добивать»
+    assert "ДАННЫХ МАЛО" in llm.calls[0][1]["content"]
+    assert any(i.field == "seo_description" and "мало сведений" in i.message for i in card.issues)
+    assert card.status == "needs_review"
+    assert card.meta.prompt_version == 3
+
+
+def test_rich_input_still_requires_800_chars(testo_raw):
+    llm = FakeLLM(make_copy(description="Коротко."), make_copy())
+    card = generate_card(testo_raw, llm)
+    assert card.meta.attempts == 2
+    assert "ДАННЫХ МАЛО" not in llm.calls[0][1]["content"]

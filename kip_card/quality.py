@@ -4,6 +4,10 @@
 - заголовок со строчной буквы и с «;» — исправляем сами, это безопасно;
 - запрос, не относящийся к товару (модель скопировала пример из промпта) — переспрашиваем;
 - оценочные слова («идеальный», «надёжный») без опоры на данные — переспрашиваем.
+
+Второй прогон добавил:
+- повтор производителя в заголовке («testo 830-T1 Testo») — убираем сами;
+- «Кому подходит» из одних должностей («технические специалисты», «снабженцы») — переспрашиваем.
 """
 
 from __future__ import annotations
@@ -35,14 +39,36 @@ _EVALUATIVE = [
 
 _WORD_RE = re.compile(r"[\w][\w\-./,]*", re.UNICODE)
 
+# Слова-должности: пункт «Кому подходит» только из них ничего не говорит о применении прибора
+_ROLE_STEMS = ("специалист", "снабжен", "инженер", "техническ", "покупател", "сотрудник",
+               "кипиа", "менеджер", "закупщик", "работник", "персонал", "профессионал")
+_ROLE_FILLER = {"и", "по", "в", "для", "отдел", "отделы", "служб", "службы", "предприятий", "области"}
+
 
 def _plain(text: str) -> str:
     return text.lower().replace("ё", "е")
 
 
+def _drop_repeated_manufacturer(title: str, product: ProductInput) -> str:
+    """«Пирометр testo 830-T1 Testo» → «Пирометр testo 830-T1», если производитель уже в названии."""
+    maker = product.manufacturer.strip()
+    if not maker or maker.lower() not in product.name.lower() or product.name not in title:
+        return title
+    before, after = title.split(product.name, 1)
+    pattern = re.compile(rf"(?<!\w){re.escape(maker)}(?!\w)", re.I)
+    before, after = pattern.sub("", before), pattern.sub("", after)
+    result = f"{before}{product.name}{after}"
+    result = re.sub(r"\s+,", ",", re.sub(r"\s{2,}", " ", result))
+    return re.sub(r",\s*,", ",", result).strip(" ,")
+
+
 def fix_title(title: str, product: ProductInput) -> str:
-    """Заглавная первая буква и запятая вместо «;». Название модели со строчной (testo) не трогаем."""
+    """Запятая вместо «;», без повтора производителя, заглавная первая буква.
+
+    Название модели со строчной по написанию производителя (testo) не трогаем.
+    """
     title = re.sub(r"\s*;\s*", ", ", title).strip(" ,")
+    title = _drop_repeated_manufacturer(title, product)
     if not title:
         return title
     first_word = title.split()[0]
@@ -91,3 +117,13 @@ def evaluative_words(text: str, source: str) -> list[str]:
         if match and not pattern.search(source_plain):
             found.append(match.group())
     return found
+
+
+def generic_audience(who_for: list[str]) -> list[str]:
+    """Пункты «Кому подходит», состоящие только из должностей, без объектов и сфер применения."""
+    bad = []
+    for item in who_for:
+        words = [w for w in re.findall(r"[а-яёa-z]+", _plain(item)) if w not in _ROLE_FILLER]
+        if words and all(any(w.startswith(stem) for stem in _ROLE_STEMS) for w in words):
+            bad.append(item)
+    return bad

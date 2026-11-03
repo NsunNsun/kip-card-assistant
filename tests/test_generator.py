@@ -68,7 +68,7 @@ def test_never_valid_raises(testo_raw):
 
 
 def test_long_title_is_truncated_with_warning(testo_raw):
-    long_title = "Пирометр testo 830-T1 инфракрасный термометр с лазерным целеуказателем Testo"
+    long_title = "Пирометр testo 830-T1 инфракрасный термометр с лазерным целеуказателем и подсветкой"
     assert len(long_title) > TITLE_MAX
     card = generate_card(testo_raw, FakeLLM(make_copy(title=long_title)), max_repair_attempts=0)
     assert len(card.seo_title) <= TITLE_MAX

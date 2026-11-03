@@ -74,6 +74,7 @@ class Meta(BaseModel):
     generated_at: str
     attempts: int
     response_format: str
+    prompt_version: int = 1
 
 
 class ProductCard(BaseModel):

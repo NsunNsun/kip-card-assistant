@@ -11,8 +11,8 @@
 - список того, чего не хватает во входных данных и что проверить.
 
 Модель пишет только тексты. Характеристики собирает код, а каждое число и технический код
-в тексте модели сверяется со входными данными. Промпт — версия 2, доработанная по итогам
-прогона на реальной модели (что нашли и что исправили — в разделе 10 DECISIONS). Подробнее — в [docs/DECISIONS.md](docs/DECISIONS.md).
+в тексте модели сверяется со входными данными. Промпт — версия 3, доработанная по итогам
+двух прогонов на реальной модели (что нашли и что исправили — в разделе 10 DECISIONS). Подробнее — в [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Быстрый старт
 
@@ -61,7 +61,7 @@ python -m kip_card check examples/input/manometer-dm02-from-task.json
 |---|---|---|
 | [testo-830-t1.json](examples/input/testo-830-t1.json) | [md](examples/output/testo-830-t1.md) · [json](examples/output/testo-830-t1.json) | Переносной пирометр, полные данные со страницы товара |
 | [owen-pd100-di1.6-111-0.5.json](examples/input/owen-pd100-di1.6-111-0.5.json) | [md](examples/output/owen-pd100-di1.6-111-0.5.md) · [json](examples/output/owen-pd100-di1.6-111-0.5.json) | Датчик давления: описание серии + характеристики конкретной модификации |
-| [manometer-dm02-from-task.json](examples/input/manometer-dm02-from-task.json) | [md](examples/output/manometer-dm02-from-task.md) · [json](examples/output/manometer-dm02-from-task.json) | Пример из ТЗ: обрезанное описание, нет степени защиты |
+| [manometer-dm02-from-task.json](examples/input/manometer-dm02-from-task.json) | [md](examples/output/manometer-dm02-from-task.md) · [json](examples/output/manometer-dm02-from-task.json) | Пример из ТЗ: мало данных — короткий честный текст вместо «воды», нет степени защиты |
 | [examples/edge-cases/](examples/edge-cases) | — | Битый JSON, нет названия, пустые поля |
 
 Результаты в `examples/output/` получены реальной моделью через OpenRouter командой выше.
@@ -191,10 +191,10 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-85 тестов, без сети и без ключа (модель заменена заглушкой): разбор и проверка входа, фактчекер,
+91 тест, без сети и без ключа (модель заменена заглушкой): разбор и проверка входа, фактчекер,
 цикл исправления ответа, переход между режимами JSON, перевод ошибок API, веб-эндпоинты,
 импорт фида (включая защиту от XML-атак), CLI. Отдельно — регрессия на настоящих ответах модели
-из первого прогона (`tests/fixtures/first_run/`): ошибки, найденные при вычитке, ловятся автоматически.
+из двух прогонов (`tests/fixtures/first_run/`, `second_run/`): ошибки, найденные при вычитке, ловятся автоматически.
 
 ## Структура
 
@@ -205,7 +205,7 @@ kip_card/
   prompts.py      системный промпт, промпт товара, промпт исправления
   llm.py          OpenAI-совместимый клиент: json_schema → json_object → prompt, понятные ошибки
   factcheck.py    поиск чисел и технических кодов, которых нет во входных данных
-  quality.py      заголовок, релевантность запросов, оценочные слова
+  quality.py      заголовок, релевантность запросов, оценочные слова, «Кому подходит»
   generator.py    сборка карточки: модель → проверки → исправление → карточка
   render.py       Markdown для контент-менеджера
   yml_import.py   импорт и аудит YML-фида
