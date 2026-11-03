@@ -11,6 +11,7 @@ from .factcheck import FactChecker
 from .llm import JSONModel, LLMError, LLMResponseError
 from .models import NO_DATA, Issue, LLMCopy, Meta, ProductCard, ProductInput, SpecRow
 from .prompts import SYSTEM_PROMPT, build_repair_prompt, build_user_prompt
+from .quality import evaluative_words, fix_title, irrelevant_queries
 from .validation import ValidationResult, parse_input
 
 log = logging.getLogger(__name__)
@@ -27,20 +28,20 @@ def _source_texts(product: ProductInput) -> list[str]:
     return texts
 
 
-def _normalize(copy: LLMCopy) -> LLMCopy:
+def _normalize(copy: LLMCopy, product: ProductInput) -> LLMCopy:
     queries: list[str] = []
     for q in copy.search_queries:
         q = " ".join(q.split()).strip(" .")
         if q and q.lower() not in {x.lower() for x in queries}:
             queries.append(q)
     return copy.model_copy(update={
-        "seo_title": " ".join(copy.seo_title.split()).strip(" .\"«»"),
+        "seo_title": fix_title(" ".join(copy.seo_title.split()).strip(" .\"«»"), product),
         "seo_description": "\n\n".join(p.strip() for p in copy.seo_description.strip().split("\n\n") if p.strip()),
         "search_queries": queries,
     })
 
 
-def review(copy: LLMCopy, checker: FactChecker) -> list[str]:
+def review(copy: LLMCopy, checker: FactChecker, product: ProductInput) -> list[str]:
     """Детерминированные проверки ответа модели. Пустой список — всё в порядке."""
     problems: list[str] = []
     title_len = len(copy.seo_title)
@@ -62,10 +63,21 @@ def review(copy: LLMCopy, checker: FactChecker) -> list[str]:
         "search_queries": "\n".join(copy.search_queries),
         "commercial": "\n".join([copy.commercial.summary, *copy.commercial.who_for, *copy.commercial.tasks]),
     }
+    source = "\n".join(_source_texts(product))
     for name, text in fields.items():
         unknown = checker.check(text)
         if unknown:
             problems.append(f"{name}: значения, которых нет во входных данных — " + ", ".join(unknown))
+        if name != "search_queries":
+            words = evaluative_words(text, source)
+            if words:
+                problems.append(f"{name}: оценочные слова без опоры на данные — " + ", ".join(words)
+                                + ". Убери их или замени фактом из данных")
+
+    unrelated = irrelevant_queries(copy.search_queries, product)
+    if unrelated:
+        problems.append("search_queries: запросы не про этот товар (нет модели, типа прибора или "
+                        "производителя) — " + "; ".join(f"«{q}»" for q in unrelated))
     return problems
 
 
@@ -124,8 +136,8 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
         raw_text = ""
         try:
             data, raw_text = llm.generate(messages)
-            copy = _normalize(LLMCopy.model_validate(data))
-            problems = review(copy, checker)
+            copy = _normalize(LLMCopy.model_validate(data), product)
+            problems = review(copy, checker, product)
             # Запоминаем лучший корректный по схеме ответ (с наименьшим числом проблем).
             if best is None or len(problems) <= len(best_problems):
                 best, best_problems = copy, problems
@@ -153,7 +165,7 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
         copy = copy.model_copy(update={"seo_title": _truncate_title(copy.seo_title)})
         issues.append(Issue(level="warning", field="seo_title",
                             message=f"Заголовок был длиннее {TITLE_MAX} символов и обрезан по слову — проверьте"))
-    for problem in review(copy, checker):
+    for problem in review(copy, checker, product):
         field = problem.split(":", 1)[0] if ":" in problem else "output"
         issues.append(Issue(level="warning", field=field, message="Проверьте: " + problem))
     for gap in copy.data_gaps:
