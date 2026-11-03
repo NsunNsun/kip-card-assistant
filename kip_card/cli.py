@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import logging
 import sys
@@ -32,6 +33,32 @@ def _read(path: str) -> str:
     return Path(path).read_text(encoding="utf-8-sig")
 
 
+def expand_paths(patterns: list[str]) -> tuple[list[str], list[str]]:
+    """Раскрывает шаблоны вида examples/input/*.json.
+
+    bash раскрывает их сам, а PowerShell и cmd.exe передают звёздочку программе как есть.
+    Возвращает (файлы, шаблоны без совпадений).
+    """
+    files: list[str] = []
+    unmatched: list[str] = []
+    for pattern in patterns:
+        if pattern == "-" or Path(pattern).exists() or not any(ch in pattern for ch in "*?["):
+            files.append(pattern)
+            continue
+        matches = sorted(glob.glob(pattern))
+        if matches:
+            files.extend(matches)
+        else:
+            unmatched.append(pattern)
+    return files, unmatched
+
+
+def _report_unmatched(unmatched: list[str]) -> int:
+    for pattern in unmatched:
+        print(f"→ {pattern}\n  Ошибка входных данных: по шаблону не найдено ни одного файла", file=sys.stderr)
+    return EXIT_INPUT if unmatched else EXIT_OK
+
+
 def _print_issues(prefix: str, issues) -> None:
     for issue in issues:
         print(f"{prefix}[{issue.level}] {issue.field}: {issue.message}", file=sys.stderr)
@@ -48,8 +75,9 @@ def cmd_generate(args) -> int:
     if out_dir:
         out_dir.mkdir(parents=True, exist_ok=True)
 
-    code = EXIT_OK
-    for path in args.files:
+    files, unmatched = expand_paths(args.files)
+    code = _report_unmatched(unmatched)
+    for path in files:
         label = "stdin" if path == "-" else path
         print(f"→ {label}", file=sys.stderr)
         try:
@@ -70,7 +98,7 @@ def cmd_generate(args) -> int:
                 (out_dir / f"{stem}.md").write_text(markdown, encoding="utf-8")
             if args.format in ("json", "both"):
                 (out_dir / f"{stem}.json").write_text(as_json + "\n", encoding="utf-8")
-            print(f"  {card.status} · попыток: {card.meta.attempts} · сохранено в {out_dir}/{stem}.*",
+            print(f"  {card.status} · попыток: {card.meta.attempts} · сохранено в {out_dir / stem}.*",
                   file=sys.stderr)
         else:
             print(as_json if args.format == "json" else markdown)
@@ -78,8 +106,9 @@ def cmd_generate(args) -> int:
 
 
 def cmd_check(args) -> int:
-    code = EXIT_OK
-    for path in args.files:
+    files, unmatched = expand_paths(args.files)
+    code = _report_unmatched(unmatched)
+    for path in files:
         print(f"→ {path}", file=sys.stderr)
         try:
             result = parse_input(_read(path))

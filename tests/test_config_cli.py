@@ -42,6 +42,28 @@ def test_cli_check_exit_codes(capsys):
     assert "Некорректный JSON" in capsys.readouterr().err
 
 
+def test_expand_paths_like_powershell():
+    # PowerShell передаёт '*.json' программе как есть — раскрываем сами
+    files, unmatched = cli.expand_paths([str(EXAMPLES / "*.json"), "-", str(EXAMPLES / "nothing-*.json")])
+    names = [p.rsplit("/", 1)[-1].rsplit("\\", 1)[-1] for p in files]
+    assert names == ["manometer-dm02-from-task.json", "owen-pd100-di1.6-111-0.5.json", "testo-830-t1.json", "-"]
+    assert unmatched == [str(EXAMPLES / "nothing-*.json")]
+
+
+def test_cli_check_with_glob(capsys):
+    assert cli.main(["check", str(EXAMPLES / "*.json")]) == cli.EXIT_OK
+    assert cli.main(["check", str(EXAMPLES / "nothing-*.json")]) == cli.EXIT_INPUT
+    assert "не найдено ни одного файла" in capsys.readouterr().err
+
+
+def test_cli_generate_with_glob(monkeypatch, tmp_path):
+    monkeypatch.setenv("LLM_API_KEY", "k")
+    monkeypatch.setattr(cli, "OpenAICompatibleLLM", lambda settings: FakeLLM(make_copy()))
+    assert cli.main(["generate", str(EXAMPLES / "*.json"), "-o", str(tmp_path), "-f", "json"]) == cli.EXIT_OK
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "manometer-dm02-from-task.json", "owen-pd100-di1.6-111-0.5.json", "testo-830-t1.json"]
+
+
 def test_cli_generate_without_key():
     assert cli.main(["generate", str(EXAMPLES / "testo-830-t1.json")]) == cli.EXIT_LLM
 

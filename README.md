@@ -35,6 +35,13 @@ cp .env.example .env               # Windows: copy .env.example .env
 python -m kip_card generate examples/input/*.json -o examples/output
 ```
 
+В Windows (PowerShell, cmd) команда та же: шаблон `*.json` программа раскрывает сама,
+если оболочка этого не сделала.
+
+```powershell
+python -m kip_card generate examples\input\*.json -o examples\output
+```
+
 Открыть веб-форму:
 
 ```bash
@@ -183,7 +190,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-71 тест, без сети и без ключа (модель заменена заглушкой): разбор и проверка входа, фактчекер,
+74 теста, без сети и без ключа (модель заменена заглушкой): разбор и проверка входа, фактчекер,
 цикл исправления ответа, переход между режимами JSON, перевод ошибок API, веб-эндпоинты,
 импорт фида (включая защиту от XML-атак), CLI.
 
