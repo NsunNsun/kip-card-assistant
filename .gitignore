@@ -1,0 +1,21 @@
+# секреты
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# локальные выгрузки фида (большие, меняются ежедневно)
+data/
+*.feed.xml
