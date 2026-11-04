@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -15,6 +15,8 @@ from dotenv import load_dotenv
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 DEFAULT_MODEL = "openai/gpt-4o-mini"
 RESPONSE_FORMATS = ("auto", "json_schema", "json_object", "prompt")
+_ON = {"on", "1", "true", "yes", "да"}
+_OFF = {"off", "0", "false", "no", "нет"}
 
 
 class ConfigError(Exception):
@@ -30,6 +32,8 @@ class Settings:
     timeout: float = 90.0
     response_format: str = "auto"
     max_repair_attempts: int = 1
+    judge_enabled: bool = True
+    judge_model: str = ""  # пусто — та же модель, что и для генерации
 
     @property
     def host(self) -> str:
@@ -43,6 +47,10 @@ class Settings:
     @property
     def is_openrouter(self) -> bool:
         return self.host.endswith("openrouter.ai")
+
+    def for_judge(self) -> "Settings":
+        """Настройки для смысловой проверки: своя модель (если задана) и температура 0."""
+        return replace(self, model=self.judge_model or self.model, temperature=0.0)
 
 
 def _float(name: str, default: float) -> float:
@@ -63,6 +71,17 @@ def _int(name: str, default: int) -> int:
         return int(raw)
     except ValueError as exc:
         raise ConfigError(f"{name} должно быть целым числом, получено: {raw!r}") from exc
+
+
+def _bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    if raw in _ON:
+        return True
+    if raw in _OFF:
+        return False
+    raise ConfigError(f"{name} должно быть on или off, получено: {raw!r}")
 
 
 def load_settings() -> Settings:
@@ -90,6 +109,8 @@ def load_settings() -> Settings:
         timeout=_float("LLM_TIMEOUT", 90.0),
         response_format=response_format,
         max_repair_attempts=max(0, _int("MAX_REPAIR_ATTEMPTS", 1)),
+        judge_enabled=_bool("JUDGE", True),
+        judge_model=os.getenv("JUDGE_MODEL", "").strip(),
     )
 
     if not settings.api_key or settings.api_key.endswith("..."):

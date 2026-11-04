@@ -75,6 +75,8 @@ class Meta(BaseModel):
     attempts: int
     response_format: str
     prompt_version: int = 1
+    judge_model: str | None = None  # модель смысловой проверки; None — проверка выключена
+    judge_status: Literal["off", "passed", "issues", "error"] = "off"
 
 
 class ProductCard(BaseModel):

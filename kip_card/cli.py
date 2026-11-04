@@ -19,6 +19,7 @@ from pathlib import Path
 
 from .config import ConfigError, load_settings
 from .generator import generate_card
+from .judge import Judge
 from .llm import LLMError, OpenAICompatibleLLM
 from .render import to_markdown
 from .validation import PROFILES, InputError, parse_input
@@ -71,6 +72,7 @@ def cmd_generate(args) -> int:
         print(f"Ошибка настройки: {exc}", file=sys.stderr)
         return EXIT_LLM
     llm = OpenAICompatibleLLM(settings)
+    judge = Judge(OpenAICompatibleLLM(settings.for_judge())) if settings.judge_enabled else None
     out_dir = Path(args.out) if args.out else None
     if out_dir:
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -81,7 +83,7 @@ def cmd_generate(args) -> int:
         label = "stdin" if path == "-" else path
         print(f"→ {label}", file=sys.stderr)
         try:
-            card = generate_card(_read(path), llm, settings.max_repair_attempts)
+            card = generate_card(_read(path), llm, settings.max_repair_attempts, judge)
         except (OSError, InputError) as exc:
             print(f"  Ошибка входных данных: {exc}", file=sys.stderr)
             code = max(code, EXIT_INPUT)
@@ -98,8 +100,8 @@ def cmd_generate(args) -> int:
                 (out_dir / f"{stem}.md").write_text(markdown, encoding="utf-8")
             if args.format in ("json", "both"):
                 (out_dir / f"{stem}.json").write_text(as_json + "\n", encoding="utf-8")
-            print(f"  {card.status} · попыток: {card.meta.attempts} · сохранено в {out_dir / stem}.*",
-                  file=sys.stderr)
+            print(f"  {card.status} · попыток: {card.meta.attempts} · смысловая проверка: "
+                  f"{card.meta.judge_status} · сохранено в {out_dir / stem}.*", file=sys.stderr)
         else:
             print(as_json if args.format == "json" else markdown)
     return code

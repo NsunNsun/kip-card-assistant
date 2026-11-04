@@ -55,9 +55,11 @@ class FakeLLM:
     def __init__(self, *responses):
         self.responses = list(responses)
         self.calls: list[list[dict]] = []
+        self.schemas: list[str] = []
 
-    def generate(self, messages):
+    def generate(self, messages, response_schema=None):
         self.calls.append(messages)
+        self.schemas.append(response_schema.name if response_schema else "product_card")
         item = self.responses.pop(0) if len(self.responses) > 1 else self.responses[0]
         if isinstance(item, Exception):
             raise item
@@ -83,5 +85,7 @@ def manometer_raw() -> str:
 def _isolated_env(monkeypatch):
     """Тесты не должны зависеть от .env разработчика."""
     for name in ("LLM_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "LLM_BASE_URL", "LLM_MODEL",
-                 "LLM_RESPONSE_FORMAT", "LLM_TEMPERATURE", "LLM_TIMEOUT", "MAX_REPAIR_ATTEMPTS"):
+                 "LLM_RESPONSE_FORMAT", "LLM_TEMPERATURE", "LLM_TIMEOUT", "MAX_REPAIR_ATTEMPTS", "JUDGE_MODEL"):
         monkeypatch.setenv(name, "")
+    # Судья по умолчанию включён; в тестах выключаем, где он не нужен, чтобы не было сети
+    monkeypatch.setenv("JUDGE", "off")

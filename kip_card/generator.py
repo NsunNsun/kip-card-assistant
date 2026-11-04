@@ -1,4 +1,8 @@
-"""Сборка карточки: проверка входа → модель → проверка ответа → (исправление) → карточка."""
+"""Сборка карточки: проверка входа → модель → проверки ответа → (исправление) → карточка.
+
+Проверки ответа: детерминированные (длины, фактчекер, качество) и, если включена,
+смысловая — вторым запросом к модели (judge.py). Замечания обеих идут в один цикл исправления.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +12,7 @@ from datetime import datetime, timezone
 from pydantic import ValidationError
 
 from .factcheck import FactChecker
+from .judge import Finding, Judge, field_texts, quote_found
 from .llm import JSONModel, LLMError, LLMResponseError
 from .models import NO_DATA, Issue, LLMCopy, Meta, ProductCard, ProductInput, SpecRow
 from .prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_repair_prompt, build_user_prompt
@@ -124,8 +129,12 @@ def _missing_fields(result: ValidationResult) -> list[str]:
     return _dedupe(missing + result.empty_specs + result.missing_specs)
 
 
-def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, max_repair_attempts: int = 1) -> ProductCard:
-    """Главная функция. Бросает InputError (плохой вход) или LLMError (модель недоступна)."""
+def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, max_repair_attempts: int = 1,
+                  judge: Judge | None = None) -> ProductCard:
+    """Главная функция. Бросает InputError (плохой вход) или LLMError (модель недоступна).
+
+    judge — смысловая проверка; None — выключена. Сбой судьи карточку не ломает.
+    """
     result = raw if isinstance(raw, ValidationResult) else parse_input(raw)
     product = result.product
     checker = FactChecker(_source_texts(product))
@@ -136,9 +145,12 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
     ]
 
     best: LLMCopy | None = None
-    best_problems: list[str] = []
+    best_score = 0
+    best_findings: list[Finding] = []
     problems: list[str] = []
     attempts = 0
+    judge_active = judge is not None
+    judge_error = ""
     for attempt in range(1, max_repair_attempts + 2):
         attempts = attempt
         raw_text = ""
@@ -146,9 +158,17 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
             data, raw_text = llm.generate(messages)
             copy = _normalize(LLMCopy.model_validate(data), product)
             problems = review(copy, checker, product, result.sparse)
+            findings: list[Finding] = []
+            if judge_active:
+                try:
+                    findings = judge.review(product, copy)
+                except LLMError as exc:
+                    log.warning("Смысловая проверка не выполнена: %s", exc)
+                    judge_active, judge_error = False, str(exc)
+            problems = problems + [f.as_problem() for f in findings]
             # Запоминаем лучший корректный по схеме ответ (с наименьшим числом проблем).
-            if best is None or len(problems) <= len(best_problems):
-                best, best_problems = copy, problems
+            if best is None or len(problems) <= best_score:
+                best, best_score, best_findings = copy, len(problems), findings
         except LLMResponseError as exc:
             raw_text, problems = exc.raw, [str(exc)]
         except ValidationError as exc:
@@ -182,6 +202,14 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
     for problem in review(copy, checker, product, result.sparse):
         field = problem.split(":", 1)[0] if ":" in problem else "output"
         issues.append(Issue(level="warning", field=field, message="Проверьте: " + problem))
+    final_texts = field_texts(copy)
+    remaining = [f for f in best_findings if quote_found(f.quote, final_texts[f.field])]
+    for finding in remaining:
+        issues.append(Issue(level="warning", field=finding.field,
+                            message=f"Проверьте смысл: «{finding.quote}» — {finding.reason}"))
+    if judge is not None and judge_error:
+        issues.append(Issue(level="warning", field="judge",
+                            message="Смысловая проверка не выполнена: " + judge_error))
     for gap in copy.data_gaps:
         issues.append(Issue(level="info", field="data_gaps", message="Модель отмечает: " + gap))
 
@@ -208,5 +236,8 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
             attempts=attempts,
             response_format=getattr(llm, "mode", "unknown"),
             prompt_version=PROMPT_VERSION,
+            judge_model=judge.model_name if judge is not None else None,
+            judge_status=("off" if judge is None else "error" if judge_error
+                          else "issues" if remaining else "passed"),
         ),
     )

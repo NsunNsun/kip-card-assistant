@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kip_card import web
+from kip_card.judge import Judge
 from kip_card.llm import LLMError
 
 from .conftest import FakeLLM, make_copy
@@ -9,8 +10,9 @@ from .conftest import FakeLLM, make_copy
 
 @pytest.fixture
 def client():
-    def use(llm):
+    def use(llm, judge=None):
         web.app.dependency_overrides[web._llm_dependency] = lambda: llm
+        web.app.dependency_overrides[web._judge_dependency] = lambda: judge
         return TestClient(web.app)
 
     yield use
@@ -59,3 +61,10 @@ def test_health_without_key_reports_misconfiguration(client):
     body = client(FakeLLM(make_copy())).get("/api/health").json()
     assert body["status"] == "misconfigured"
     web.get_settings.cache_clear()
+
+
+def test_generate_with_judge(client, testo_raw):
+    judge = Judge(FakeLLM({"issues": []}))
+    body = client(FakeLLM(make_copy()), judge).post("/api/generate", content=testo_raw).json()
+    assert body["card"]["meta"]["judge_status"] == "passed"
+    assert body["card"]["meta"]["judge_model"] == "fake-model"

@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from . import __version__
 from .config import ConfigError, Settings, load_settings
 from .generator import generate_card
+from .judge import Judge
 from .llm import LLMError, OpenAICompatibleLLM
 from .render import to_markdown
 from .validation import PROFILES, InputError, parse_input
@@ -38,6 +39,12 @@ def get_settings() -> Settings:
 @lru_cache(maxsize=1)
 def get_llm() -> OpenAICompatibleLLM:
     return OpenAICompatibleLLM(get_settings())
+
+
+@lru_cache(maxsize=1)
+def get_judge() -> Judge | None:
+    settings = get_settings()
+    return Judge(OpenAICompatibleLLM(settings.for_judge())) if settings.judge_enabled else None
 
 
 def _error(status: int, message: str, issues=None) -> JSONResponse:
@@ -73,7 +80,9 @@ def health():
         settings = get_settings()
     except ConfigError as exc:
         return {"status": "misconfigured", "error": str(exc), "version": __version__}
-    return {"status": "ok", "model": settings.model, "llm_host": settings.host, "version": __version__}
+    return {"status": "ok", "model": settings.model, "llm_host": settings.host,
+            "judge": (settings.judge_model or settings.model) if settings.judge_enabled else "off",
+            "version": __version__}
 
 
 @app.get("/api/examples")
@@ -112,10 +121,14 @@ def _llm_dependency() -> OpenAICompatibleLLM:
     return get_llm()
 
 
+def _judge_dependency() -> Judge | None:
+    return get_judge()
+
+
 @app.post("/api/generate")
-def generate(body: bytes = Depends(_body), llm=Depends(_llm_dependency)):
+def generate(body: bytes = Depends(_body), llm=Depends(_llm_dependency), judge=Depends(_judge_dependency)):
     result = parse_input(body)  # сначала вход: плохой JSON не должен тратить токены
     settings = getattr(llm, "settings", None)
     attempts = settings.max_repair_attempts if settings else 1
-    card = generate_card(result, llm, attempts)
+    card = generate_card(result, llm, attempts, judge)
     return {"card": card.model_dump(), "markdown": to_markdown(card)}

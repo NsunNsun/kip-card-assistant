@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from dataclasses import dataclass
 from typing import Protocol
 
 import openai
@@ -42,8 +43,11 @@ class JSONModel(Protocol):
     model_name: str
     mode: str
 
-    def generate(self, messages: list[dict]) -> tuple[dict, str]:
-        """Возвращает (разобранный JSON, исходный текст ответа)."""
+    def generate(self, messages: list[dict], response_schema: "ResponseSchema | None" = None) -> tuple[dict, str]:
+        """Возвращает (разобранный JSON, исходный текст ответа).
+
+        response_schema — схема ответа; по умолчанию — карточка товара.
+        """
         ...
 
 
@@ -72,6 +76,18 @@ RESPONSE_SCHEMA = {
 }
 
 MODES = ("json_schema", "json_object", "prompt")
+
+
+@dataclass(frozen=True)
+class ResponseSchema:
+    """Схема ответа: строгая JSON-схема и текстовая подсказка для режимов без схемы."""
+
+    name: str
+    schema: dict
+    json_hint: str
+
+
+PRODUCT_CARD = ResponseSchema("product_card", RESPONSE_SCHEMA, JSON_INSTRUCTION)
 
 
 def extract_json(text: str) -> dict:
@@ -149,7 +165,7 @@ class OpenAICompatibleLLM:
         self._modes = list(MODES) if fmt == "auto" else [fmt]
         self.mode = self._modes[0]
 
-    def _request(self, messages: list[dict], mode: str):
+    def _request(self, messages: list[dict], mode: str, spec: ResponseSchema):
         kwargs: dict = {
             "model": self.settings.model,
             "messages": messages,
@@ -158,25 +174,26 @@ class OpenAICompatibleLLM:
         if mode == "json_schema":
             kwargs["response_format"] = {
                 "type": "json_schema",
-                "json_schema": {"name": "product_card", "strict": True, "schema": RESPONSE_SCHEMA},
+                "json_schema": {"name": spec.name, "strict": True, "schema": spec.schema},
             }
             if self.settings.is_openrouter:
                 # Маршрутизировать только к провайдерам, которые реально поддерживают схему.
                 kwargs["extra_body"] = {"provider": {"require_parameters": True}}
         else:
             messages = [dict(m) for m in messages]
-            messages[0]["content"] = messages[0]["content"] + JSON_INSTRUCTION
+            messages[0]["content"] = messages[0]["content"] + spec.json_hint
             kwargs["messages"] = messages
             if mode == "json_object":
                 kwargs["response_format"] = {"type": "json_object"}
         return self.client.chat.completions.create(**kwargs)
 
-    def generate(self, messages: list[dict]) -> tuple[dict, str]:
+    def generate(self, messages: list[dict], response_schema: ResponseSchema | None = None) -> tuple[dict, str]:
+        spec = response_schema or PRODUCT_CARD
         last_exc: Exception | None = None
         while self._modes:
             mode = self._modes[0]
             try:
-                response = self._request(messages, mode)
+                response = self._request(messages, mode, spec)
             except openai.APIError as exc:
                 if _is_format_unsupported(exc) and len(self._modes) > 1:
                     log.warning("Режим %s не поддерживается (%s), пробую следующий", mode, exc)
