@@ -3,7 +3,8 @@
 tests/fixtures/gpt54mini_run/*.json — openai/gpt-5.4-mini, промпт версии 3;
 tests/fixtures/qwen_run/*.json      — qwen/qwen3.8-27b, промпт версии 3;
 tests/fixtures/v4_run/*.json        — qwen/qwen3.8-27b + судья gpt-5.4-mini, промпт версии 4;
-tests/fixtures/v5_run/*.json        — то же, промпт версии 5.
+tests/fixtures/v5_run/*.json        — то же, промпт версии 5;
+tests/fixtures/final_run/*.json     — то же, промпт версии 5 и судья с доказательствами.
 Каждая проблема, найденная при ручной вычитке, должна ловиться или исправляться кодом,
 а хорошая карточка (ПД100 от Qwen) — проходить проверки без замечаний.
 """
@@ -87,7 +88,7 @@ def test_gpt54_testo():
 
 
 def test_no_run_has_invented_values():
-    for run in ("gpt54mini_run", "qwen_run", "v4_run", "v5_run"):
+    for run in ("gpt54mini_run", "qwen_run", "v4_run", "v5_run", "final_run"):
         for stem in (PD100, TESTO, MANOMETER):
             _, problems = replay(run, stem)
             assert not has(problems, "значения, которых нет"), (run, stem)
@@ -210,3 +211,30 @@ def test_v5_run_passes_deterministic_checks(stem):
     assert problems == [], problems
     if stem == MANOMETER:
         assert copy.commercial.who_for == []  # честное «данных нет» вместо тавтологии
+
+
+# ------------------------------------------------------------------ итоговый прогон
+
+
+@pytest.mark.parametrize("stem", [PD100, TESTO])
+def test_final_run_clean(stem):
+    _, problems = replay("final_run", stem)
+    assert problems == [], problems
+
+
+def test_final_run_manometer_short_repeat_caught():
+    """«Присоединение G1/2, диаметр корпуса 100 мм» и сразу то же самое в следующем предложении."""
+    _, problems = replay("final_run", MANOMETER)
+    assert has(problems, "повтор уже сказанного", "показывающий прибор с присоединением G1/2")
+
+
+def test_repeat_check_finds_exactly_known_repeats_across_all_runs():
+    """По всем сохранённым ответам моделей — только четыре известных повтора, без ложных."""
+    found = set()
+    for path in sorted(FIXTURES.glob("*_run/*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if repeated_sentences(data["seo_description"]):
+            found.add(f"{path.parent.name}/{path.stem}")
+    assert found == {
+        f"final_run/{MANOMETER}", f"v4_run/{MANOMETER}", f"qwen_run/{MANOMETER}", f"gpt54mini_run/{PD100}",
+    }

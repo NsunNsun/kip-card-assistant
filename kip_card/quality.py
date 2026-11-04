@@ -231,23 +231,30 @@ def _stems(sentence: str) -> set[str]:
     return {w.lower().replace("ё", "е")[:5] for w in _STEM_WORD_RE.findall(sentence)}
 
 
-def repeated_sentences(text: str, threshold: float = 0.7, min_words: int = 4) -> list[str]:
-    """Предложения, которые почти дословно повторяют смысл предыдущих (те же основы слов).
+def repeated_sentences(text: str, threshold: float = 0.7, min_words: int = 4, min_subset: int = 3) -> list[str]:
+    """Предложения, которые повторяют смысл предыдущих (те же основы слов).
 
-    Мера — доля общих основ от меньшего предложения. Реальный пример: «Показывающий манометр…
-    предназначен для измерения избыточного давления» и в конце «Прибор относится к показывающим
-    манометрам и предназначен для измерения избыточного давления».
+    Повтор, если (а) у обоих предложений не меньше min_words основ и доля общих основ
+    от меньшего — не меньше threshold, или (б) все основы короткого предложения (не меньше
+    min_subset) есть в другом — правило для коротких фраз, которые первое правило пропускает.
+    Реальные примеры: «Показывающий манометр… предназначен для измерения избыточного давления»
+    и в конце «Прибор относится к показывающим манометрам и предназначен для измерения
+    избыточного давления»; «Присоединение G1/2, диаметр корпуса 100 мм» и сразу за ним
+    «Манометр… показывающий прибор с присоединением G1/2 и диаметром корпуса 100 мм».
     """
     sentences = [s.strip() for s in _SENTENCE_RE.split(text.replace("\n", " ")) if s.strip()]
     seen: list[set[str]] = []
     repeats = []
     for sentence in sentences:
         stems = _stems(sentence)
-        if len(stems) >= min_words:
-            for prev in seen:
-                if len(prev) >= min_words and len(stems & prev) / min(len(stems), len(prev)) >= threshold:
-                    repeats.append(sentence)
-                    break
+        for prev in seen:
+            small, large = sorted((stems, prev), key=len)
+            if not small:
+                continue
+            overlap = len(small & large) / len(small)
+            if (len(small) >= min_words and overlap >= threshold) or (len(small) >= min_subset and small <= large):
+                repeats.append(sentence)
+                break
         seen.append(stems)
     return repeats
 
