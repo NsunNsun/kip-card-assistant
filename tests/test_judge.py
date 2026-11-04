@@ -25,8 +25,8 @@ THIRD_RUN = Path(__file__).parent / "fixtures" / "third_run"
 CORPUS = "Корпус датчика выполнен из нержавеющей стали AISI 316L"
 
 
-def finding(quote, field="seo_description", reason="в данных этого нет"):
-    return {"field": field, "quote": quote, "reason": reason}
+def finding(quote, field="seo_description", reason="в данных этого нет", evidence="", verdict="not_in_data"):
+    return {"field": field, "quote": quote, "reason": reason, "data_evidence": evidence, "verdict": verdict}
 
 
 def report(*findings):
@@ -178,3 +178,51 @@ def test_cli_generate_with_separate_judge_model(monkeypatch, tmp_path):
     meta = json.loads((tmp_path / "testo-830-t1.json").read_text(encoding="utf-8"))["meta"]
     assert meta["judge_model"] == "judge-model" and meta["judge_status"] == "passed"
     assert jud.schemas == ["judge_review"]
+
+
+# ------------------------------------------------------------------ доказательства и вердикт (прогон версии 5)
+
+V5_PD100 = Path(__file__).parent / "fixtures" / "v5_run" / "owen-pd100-di1.6-111-0.5.json"
+SEWER = "Объекты ЖКХ, системы водоснабжения, водоподготовки и канализации"
+
+
+def v5_pd100_copy():
+    return LLMCopy.model_validate(json.loads(V5_PD100.read_text(encoding="utf-8")))
+
+
+def test_confirmed_verdict_is_dropped(pd100_raw):
+    """Ложное замечание из прогона: судья сам написал «Остальное подтверждается»."""
+    judge = Judge(FakeLLM(report(finding("ПД100-ДИ1,6-111-0,5 ОВЕН, 1,6 МПа", "seo_title",
+                                         reason="подтверждается", verdict="confirmed"))))
+    assert judge.review(parse_input(pd100_raw).product, v5_pd100_copy()) == []
+
+
+def test_real_evidence_is_shown_in_warning(pd100_raw):
+    """Судья ошибся про канализацию — но приложенная цитата из данных сразу это показывает."""
+    evidence = "мониторинг давления в сетях водоснабжения и канализации"
+    judge = Judge(FakeLLM(report(finding(SEWER, "commercial", reason="канализация не названа", evidence=evidence))))
+    card = generate_card(pd100_raw, FakeLLM(json.loads(V5_PD100.read_text(encoding="utf-8"))),
+                         max_repair_attempts=0, judge=judge)
+    warning = next(i.message for i in card.issues if i.message.startswith("Проверьте смысл"))
+    assert f"(в данных: «{evidence}»)" in warning
+
+
+def test_fake_evidence_is_not_shown(pd100_raw):
+    judge = Judge(FakeLLM(report(finding(SEWER, "commercial", evidence="этой фразы нет в данных"))))
+    [found] = judge.review(parse_input(pd100_raw).product, v5_pd100_copy())
+    assert found.data_evidence == ""
+    assert found.as_warning().endswith("(в данных об этом нет)")
+
+
+def test_old_style_answer_without_new_fields_still_works(pd100_raw):
+    judge = Judge(FakeLLM({"issues": [{"field": "commercial", "quote": SEWER, "reason": "нет в данных"}]}))
+    [found] = judge.review(parse_input(pd100_raw).product, v5_pd100_copy())
+    assert found.verdict == "not_in_data"
+
+
+def test_judge_schema_requires_evidence_and_verdict():
+    from kip_card.judge import JUDGE_SCHEMA
+    item = JUDGE_SCHEMA.schema["properties"]["issues"]["items"]
+    assert {"data_evidence", "verdict"} <= set(item["required"])
+    assert "confirmed" in item["properties"]["verdict"]["enum"]
+    assert "data_evidence" in JUDGE_PROMPT

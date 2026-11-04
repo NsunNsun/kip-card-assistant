@@ -2,7 +2,8 @@
 
 tests/fixtures/gpt54mini_run/*.json — openai/gpt-5.4-mini, промпт версии 3;
 tests/fixtures/qwen_run/*.json      — qwen/qwen3.8-27b, промпт версии 3;
-tests/fixtures/v4_run/*.json        — qwen/qwen3.8-27b + судья gpt-5.4-mini, промпт версии 4.
+tests/fixtures/v4_run/*.json        — qwen/qwen3.8-27b + судья gpt-5.4-mini, промпт версии 4;
+tests/fixtures/v5_run/*.json        — то же, промпт версии 5.
 Каждая проблема, найденная при ручной вычитке, должна ловиться или исправляться кодом,
 а хорошая карточка (ПД100 от Qwen) — проходить проверки без замечаний.
 """
@@ -86,7 +87,7 @@ def test_gpt54_testo():
 
 
 def test_no_run_has_invented_values():
-    for run in ("gpt54mini_run", "qwen_run", "v4_run"):
+    for run in ("gpt54mini_run", "qwen_run", "v4_run", "v5_run"):
         for stem in (PD100, TESTO, MANOMETER):
             _, problems = replay(run, stem)
             assert not has(problems, "значения, которых нет"), (run, stem)
@@ -198,3 +199,14 @@ def test_judge_prompt_title_and_synonym_rules():
     assert "в заголовке проверяй только факты" in JUDGE_PROMPT
     assert "К seo_title это не относится" in JUDGE_PROMPT
     assert "синонимичный пересказ" in JUDGE_PROMPT
+
+
+# ------------------------------------------------------------------ прогон версии 5: все три — без замечаний кода
+
+
+@pytest.mark.parametrize("stem", [PD100, TESTO, MANOMETER])
+def test_v5_run_passes_deterministic_checks(stem):
+    copy, problems = replay("v5_run", stem)
+    assert problems == [], problems
+    if stem == MANOMETER:
+        assert copy.commercial.who_for == []  # честное «данных нет» вместо тавтологии

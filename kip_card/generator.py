@@ -240,8 +240,7 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
     final_texts = field_texts(copy)
     remaining = [f for f in best_findings if quote_found(f.quote, final_texts[f.field])]
     for finding in remaining:
-        issues.append(Issue(level="warning", field=finding.field,
-                            message=f"Проверьте смысл: «{finding.quote}» — {finding.reason}"))
+        issues.append(Issue(level="warning", field=finding.field, message=finding.as_warning()))
     if judge is not None and judge_error:
         issues.append(Issue(level="warning", field="judge",
                             message="Смысловая проверка не выполнена: " + judge_error))
