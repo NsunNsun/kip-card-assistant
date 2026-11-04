@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import ProductCard
+from .models import NO_DATA, ProductCard
 
 _LEVEL = {"error": "Ошибка", "warning": "Проверить", "info": "Заметка"}
 
@@ -50,7 +50,7 @@ def to_markdown(card: ProductCard) -> str:
     lines.append("\n## Для менеджера")
     lines.append(card.commercial.summary)
     lines.append("\n**Кому подходит:**")
-    lines += [f"- {x}" for x in card.commercial.who_for]
+    lines += [f"- {x}" for x in card.commercial.who_for] or [f"- **{NO_DATA}**"]
     lines.append("\n**Какие задачи решает:**")
     lines += [f"- {x}" for x in card.commercial.tasks]
 

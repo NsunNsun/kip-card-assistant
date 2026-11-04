@@ -61,7 +61,7 @@
   table { border-collapse: collapse; width: 100%; margin-top: 6px; font-size: 14px; }
   td { border-bottom: 1px solid var(--line); padding: 5px 8px 5px 0; vertical-align: top; }
   td:first-child { color: var(--muted); width: 42%; }
-  td.nodata { font-weight: 600; color: var(--err-text); }
+  td.nodata, li.nodata { font-weight: 600; color: var(--err-text); }
   ol, ul.plain { margin: 6px 0 0; padding-left: 20px; }
   pre { background: var(--code); padding: 12px; border-radius: 6px; overflow: auto; font-size: 12.5px; max-height: 70vh; }
   .meta { font-size: 12px; color: var(--muted); }
@@ -228,8 +228,8 @@ function renderCard(card, md) {
     `<tr><td>${esc(r.name)}</td><td class="${r.source === "missing" ? "nodata" : ""}">${esc(r.value)}</td></tr>`).join("") + "</table>");
   html += block("Поисковые запросы", "", card.search_queries.join("\n"), "<ol>" + card.search_queries.map(q => `<li>${esc(q)}</li>`).join("") + "</ol>");
   const c = card.commercial;
-  const commText = `${c.summary}\n\nКому подходит:\n- ${c.who_for.join("\n- ")}\n\nЗадачи:\n- ${c.tasks.join("\n- ")}`;
-  html += block("Для менеджера", "", commText, `<p class="text">${esc(c.summary)}</p><b>Кому подходит</b><ul class="plain">${c.who_for.map(x => `<li>${esc(x)}</li>`).join("")}</ul><b>Какие задачи решает</b><ul class="plain">${c.tasks.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`);
+  const commText = `${c.summary}\n\nКому подходит:\n- ${(c.who_for.length ? c.who_for : ["данных нет"]).join("\n- ")}\n\nЗадачи:\n- ${c.tasks.join("\n- ")}`;
+  html += block("Для менеджера", "", commText, `<p class="text">${esc(c.summary)}</p><b>Кому подходит</b><ul class="plain">${c.who_for.length ? c.who_for.map(x => `<li>${esc(x)}</li>`).join("") : '<li class="nodata">данных нет</li>'}</ul><b>Какие задачи решает</b><ul class="plain">${c.tasks.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`);
   const notes = card.issues.filter(i => i.level === "info");
   if (notes.length) html += `<div class="block"><h3>Заметки</h3>${issuesHtml(notes)}</div>`;
   $("out-card").innerHTML = html;

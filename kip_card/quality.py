@@ -93,13 +93,16 @@ def irrelevant_queries(queries: list[str], product: ProductInput) -> list[str]:
     """Запросы, в которых нет ни одного слова из названия, типа, категории или производителя.
 
     Сравнение по основе слова (первые 5 букв), чтобы «давления» совпадало с «давление».
+    Модель из коротких частей («dm 02» при названии «… DM 02») узнаётся целиком.
     """
     identity = _identity(product)
     identity_compact = re.sub(r"[\s\-]", "", identity)
     bad = []
     for query in queries:
-        relevant = False
-        for word in _WORD_RE.findall(_plain(query)):
+        words = [w.strip(".,/") for w in _WORD_RE.findall(_plain(query))]
+        content = re.sub(r"[\s\-]", "", " ".join(w for w in words if w and w not in _QUERY_STOPWORDS))
+        relevant = len(content) >= 3 and content in identity_compact
+        for word in ([] if relevant else _WORD_RE.findall(_plain(query))):
             word = word.strip(".,/")
             if len(word) < 3 or word in _QUERY_STOPWORDS:
                 continue
@@ -216,3 +219,42 @@ def unnatural_queries(queries: list[str]) -> list[str]:
 def specs_in_audience(who_for: list[str]) -> list[str]:
     """Пункты «Кому подходит» с числами — это характеристики, а не места применения."""
     return [item for item in who_for if re.search(r"\d", item)]
+
+
+# ------------------------------------------------------------------ повторы и сокращения
+
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[А-ЯЁA-Z])")
+_STEM_WORD_RE = re.compile(r"[а-яёa-z]{4,}", re.IGNORECASE)
+
+
+def _stems(sentence: str) -> set[str]:
+    return {w.lower().replace("ё", "е")[:5] for w in _STEM_WORD_RE.findall(sentence)}
+
+
+def repeated_sentences(text: str, threshold: float = 0.7, min_words: int = 4) -> list[str]:
+    """Предложения, которые почти дословно повторяют смысл предыдущих (те же основы слов).
+
+    Мера — доля общих основ от меньшего предложения. Реальный пример: «Показывающий манометр…
+    предназначен для измерения избыточного давления» и в конце «Прибор относится к показывающим
+    манометрам и предназначен для измерения избыточного давления».
+    """
+    sentences = [s.strip() for s in _SENTENCE_RE.split(text.replace("\n", " ")) if s.strip()]
+    seen: list[set[str]] = []
+    repeats = []
+    for sentence in sentences:
+        stems = _stems(sentence)
+        if len(stems) >= min_words:
+            for prev in seen:
+                if len(prev) >= min_words and len(stems & prev) / min(len(stems), len(prev)) >= threshold:
+                    repeats.append(sentence)
+                    break
+        seen.append(stems)
+    return repeats
+
+
+_ABBREV_RE = re.compile(r"(?<![\w.])[а-яё]{1,5}\.\s?[а-яё]{1,6}\.(?![\w])", re.IGNORECASE)
+
+
+def abbreviations(text: str) -> list[str]:
+    """Нераскрытые сокращения из данных вроде «изм. знач.» в тексте для покупателя."""
+    return list(dict.fromkeys(m.group() for m in _ABBREV_RE.finditer(text)))

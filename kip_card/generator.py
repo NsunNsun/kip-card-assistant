@@ -16,8 +16,8 @@ from .judge import Finding, Judge, field_texts, quote_found
 from .llm import JSONModel, LLMError, LLMResponseError
 from .models import NO_DATA, Issue, LLMCopy, Meta, ProductCard, ProductInput, SpecRow
 from .prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_repair_prompt, build_user_prompt
-from .quality import (evaluative_words, fix_title, generic_audience, irrelevant_queries, restore_case,
-                      service_phrases, specs_in_audience, unnatural_queries)
+from .quality import (abbreviations, evaluative_words, fix_title, generic_audience, irrelevant_queries,
+                      repeated_sentences, restore_case, service_phrases, specs_in_audience, unnatural_queries)
 from .validation import ValidationResult, parse_input
 
 log = logging.getLogger(__name__)
@@ -71,8 +71,18 @@ def review(copy: LLMCopy, checker: FactChecker, product: ProductInput, sparse: b
         problems.append(f"seo_description: {desc_len} символов, нужно от {DESCRIPTION_MIN} до {DESCRIPTION_MAX}")
     if not QUERIES_MIN <= len(copy.search_queries) <= QUERIES_MAX:
         problems.append(f"search_queries: {len(copy.search_queries)} шт., нужно от {QUERIES_MIN} до {QUERIES_MAX}")
-    if not copy.commercial.who_for or not copy.commercial.tasks:
-        problems.append("commercial: заполни who_for и tasks")
+    if not copy.commercial.tasks:
+        problems.append("commercial: заполни tasks")
+    if not copy.commercial.who_for and not sparse:
+        problems.append("commercial: заполни who_for — места применения из описания")
+    repeats = repeated_sentences(copy.seo_description)
+    if repeats:
+        problems.append("seo_description: повтор уже сказанного — " + "; ".join(f"«{x}»" for x in repeats)
+                        + ". Убери повтор или замени новым фактом из данных")
+    short = abbreviations("\n".join([copy.seo_description, copy.commercial.summary, *copy.commercial.tasks]))
+    if short:
+        problems.append("seo_description: нераскрытые сокращения — " + ", ".join(f"«{x}»" for x in short)
+                        + ". Напиши слова полностью, числа не меняй")
     numbered = specs_in_audience(copy.commercial.who_for)
     if numbered:
         problems.append("commercial.who_for: характеристики вместо мест применения — "
@@ -137,6 +147,9 @@ def _key_specs(result: ValidationResult) -> list[SpecRow]:
     missing = _dedupe(result.empty_specs + result.missing_specs)
     rows += [SpecRow(name=k, value=NO_DATA, source="missing") for k in missing]
     return rows
+
+
+WHO_FOR_MISSING = "Сферы применения (кому подходит)"
 
 
 def _missing_fields(result: ValidationResult) -> list[str]:
@@ -250,7 +263,7 @@ def generate_card(raw: str | bytes | dict | ValidationResult, llm: JSONModel, ma
         key_specs=_key_specs(result),
         search_queries=copy.search_queries,
         commercial=copy.commercial,
-        missing_fields=_missing_fields(result),
+        missing_fields=_missing_fields(result) + ([] if copy.commercial.who_for else [WHO_FOR_MISSING]),
         issues=issues,
         meta=Meta(
             model=getattr(llm, "model_name", "unknown"),
