@@ -13,8 +13,8 @@
 Модель пишет только тексты. Характеристики собирает код, а каждое число и технический код
 в тексте модели сверяется со входными данными. Второй запрос к модели («судья») проверяет
 смысл: не перенесено ли свойство части на весь прибор, нет ли оценок и сфер применения,
-которых нет в данных. Промпт — версия 3, доработанная по итогам
-двух прогонов на реальной модели (что нашли и что исправили — в разделе 10 DECISIONS). Подробнее — в [docs/DECISIONS.md](docs/DECISIONS.md).
+которых нет в данных. Промпт — версия 5, доработанная по итогам
+прогонов на реальных моделях (что нашли и что исправили — в разделах 10–13 DECISIONS). Подробнее — в [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Быстрый старт
 
@@ -66,7 +66,8 @@ python -m kip_card check examples/input/manometer-dm02-from-task.json
 | [manometer-dm02-from-task.json](examples/input/manometer-dm02-from-task.json) | [md](examples/output/manometer-dm02-from-task.md) · [json](examples/output/manometer-dm02-from-task.json) | Пример из ТЗ: мало данных — короткий честный текст вместо «воды», нет степени защиты |
 | [examples/edge-cases/](examples/edge-cases) | — | Битый JSON, нет названия, пустые поля |
 
-Результаты в `examples/output/` получены реальной моделью через OpenRouter командой выше.
+Результаты в `examples/output/` получены командой выше через OpenRouter: генерация `qwen/qwen3.8-27b`,
+смысловая проверка `openai/gpt-5.4-mini`, промпт версии 5.
 Откуда взяты данные для примеров и что в них не так — в [examples/README.md](examples/README.md).
 
 ## Входные данные
@@ -102,7 +103,7 @@ JSON-объект. Обязательно только `name`, остально�
   "missing_fields": ["Степень защиты"],  // чего нет во входных данных
   "issues": [{"level": "warning", "field": "description", "message": "..."}],
   "meta": {"model": "...", "attempts": 1, "response_format": "json_schema", "generated_at": "...",
-           "prompt_version": 3, "judge_model": "...", "judge_status": "passed"}  // off | passed | issues | error
+           "prompt_version": 5, "judge_model": "...", "judge_status": "passed"}  // off | passed | issues | error
 }
 ```
 
