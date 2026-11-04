@@ -100,9 +100,9 @@ def cmd_generate(args) -> int:
         if out_dir:
             stem = "stdin" if path == "-" else Path(path).stem
             if args.format in ("md", "both"):
-                (out_dir / f"{stem}.md").write_text(markdown, encoding="utf-8")
+                (out_dir / f"{stem}.md").write_text(markdown, encoding="utf-8", newline="\n")
             if args.format in ("json", "both"):
-                (out_dir / f"{stem}.json").write_text(as_json + "\n", encoding="utf-8")
+                (out_dir / f"{stem}.json").write_text(as_json + "\n", encoding="utf-8", newline="\n")
             print(f"  {card.status} · попыток: {card.meta.attempts} · смысловая проверка: "
                   f"{card.meta.judge_status} · {elapsed} · сохранено в {out_dir / stem}.*", file=sys.stderr)
         else:
@@ -145,7 +145,7 @@ def cmd_import_yml(args) -> int:
             out = Path(args.out)
             out.mkdir(parents=True, exist_ok=True)
             target = out / f"offer-{product['identifiers']['id в YML-фиде']}.json"
-            target.write_text(text + "\n", encoding="utf-8")
+            target.write_text(text + "\n", encoding="utf-8", newline="\n")
             print(f"Сохранено: {target}", file=sys.stderr)
         else:
             print(text)
