@@ -73,23 +73,39 @@ def test_json_schema_mode_and_openrouter_routing():
     assert sent["extra_body"] == {"provider": {"require_parameters": True}}
 
 
+def test_schema_retried_without_temperature():
+    """Рассуждающие модели не принимают temperature — строгая схема должна сохраниться."""
+    client = FakeClient(status_error(openai.NotFoundError, 404, "No endpoints found that support the requested parameters"),
+                        completion(json.dumps(GOOD)), completion(json.dumps(GOOD)))
+    llm = OpenAICompatibleLLM(settings(), client=client)
+    messages = [{"role": "system", "content": "s"}, {"role": "user", "content": "u"}]
+    llm.generate(messages)
+    llm.generate(messages)
+    assert llm.mode == "json_schema"
+    assert "temperature" in client.kwargs[0]
+    assert "temperature" not in client.kwargs[1] and "temperature" not in client.kwargs[2]
+    assert client.kwargs[1]["response_format"]["type"] == "json_schema"
+
+
 def test_fallback_to_json_object_when_schema_unsupported():
     client = FakeClient(status_error(openai.BadRequestError, 400, "response_format not supported"),
+                        status_error(openai.BadRequestError, 400, "response_format not supported"),
                         completion(json.dumps(GOOD)))
     llm = OpenAICompatibleLLM(settings(), client=client)
     llm.generate([{"role": "system", "content": "s"}, {"role": "user", "content": "u"}])
     assert llm.mode == "json_object"
-    assert client.kwargs[1]["response_format"] == {"type": "json_object"}
-    assert "ФОРМАТ ОТВЕТА" in client.kwargs[1]["messages"][0]["content"]
+    assert client.kwargs[2]["response_format"] == {"type": "json_object"}
+    assert "temperature" in client.kwargs[2]  # без схемы temperature снова отправляется
+    assert "ФОРМАТ ОТВЕТА" in client.kwargs[2]["messages"][0]["content"]
 
 
 def test_fallback_to_prompt_mode_for_local_server():
     client = FakeClient(status_error(openai.BadRequestError, 400), status_error(openai.BadRequestError, 400),
-                        completion(json.dumps(GOOD)))
+                        status_error(openai.BadRequestError, 400), completion(json.dumps(GOOD)))
     llm = OpenAICompatibleLLM(settings(base_url="http://localhost:11434/v1"), client=client)
     llm.generate([{"role": "system", "content": "s"}, {"role": "user", "content": "u"}])
     assert llm.mode == "prompt"
-    assert "response_format" not in client.kwargs[2]
+    assert "response_format" not in client.kwargs[3]
     assert "extra_body" not in client.kwargs[0]  # параметры OpenRouter не шлём локальному серверу
 
 

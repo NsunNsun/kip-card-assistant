@@ -68,9 +68,16 @@ def test_judge_uses_own_schema_and_data_blocks(testo_raw):
 
 def test_judge_drops_quotes_not_in_text(testo_raw):
     copy = LLMCopy.model_validate(make_copy())
-    judge = Judge(FakeLLM(report(finding("этой фразы нет в тексте"), finding("с лазерным целеуказателем", "seo_title"))))
+    judge = Judge(FakeLLM(report(finding("этой фразы нет в тексте"), finding("лазерный целеуказатель упрощают наведение"))))
     found = judge.review(parse_input(testo_raw).product, copy)
-    assert [f.quote for f in found] == ["с лазерным целеуказателем"]
+    assert [f.quote for f in found] == ["лазерный целеуказатель упрощают наведение"]
+
+
+def test_judge_drops_quotes_taken_from_input_data(testo_raw):
+    """Фраза из данных не может быть выдумкой (ложное замечание из прогона gpt-4o-mini)."""
+    copy = LLMCopy.model_validate(make_copy(title="Пирометр testo 830-T1 с лазерным целеуказателем"))
+    judge = Judge(FakeLLM(report(finding("с лазерным целеуказателем", "seo_title", reason="усиление"))))
+    assert judge.review(parse_input(testo_raw).product, copy) == []
 
 
 def test_judge_bad_answer_is_llm_error(testo_raw):
@@ -81,7 +88,7 @@ def test_judge_bad_answer_is_llm_error(testo_raw):
 
 def test_judge_prompt_has_no_concrete_products():
     lowered = JUDGE_PROMPT.lower()
-    for word in ("testo", "пирометр", "пд100", "овен", "манометр", "aisi", "316"):
+    for word in ("testo", "пирометр", "пд100", "овен", "манометр", "aisi", "316", "изоляц", "двигател"):
         assert word not in lowered, word
 
 

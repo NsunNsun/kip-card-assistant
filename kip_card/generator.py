@@ -16,7 +16,8 @@ from .judge import Finding, Judge, field_texts, quote_found
 from .llm import JSONModel, LLMError, LLMResponseError
 from .models import NO_DATA, Issue, LLMCopy, Meta, ProductCard, ProductInput, SpecRow
 from .prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_repair_prompt, build_user_prompt
-from .quality import evaluative_words, fix_title, generic_audience, irrelevant_queries
+from .quality import (evaluative_words, fix_title, generic_audience, irrelevant_queries, restore_case,
+                      service_phrases, specs_in_audience, unnatural_queries)
 from .validation import ValidationResult, parse_input
 
 log = logging.getLogger(__name__)
@@ -39,10 +40,17 @@ def _normalize(copy: LLMCopy, product: ProductInput) -> LLMCopy:
         q = " ".join(q.split()).strip(" .").lower()  # запросы набирают строчными
         if q and q.lower() not in {x.lower() for x in queries}:
             queries.append(q)
+    fix = lambda text: restore_case(text, product)  # noqa: E731
+    commercial = copy.commercial.model_copy(update={
+        "summary": fix(copy.commercial.summary),
+        "who_for": [fix(x) for x in copy.commercial.who_for],
+        "tasks": [fix(x) for x in copy.commercial.tasks],
+    })
     return copy.model_copy(update={
-        "seo_title": fix_title(" ".join(copy.seo_title.split()).strip(" .\"«»"), product),
-        "seo_description": "\n\n".join(p.strip() for p in copy.seo_description.strip().split("\n\n") if p.strip()),
-        "search_queries": queries,
+        "seo_title": fix_title(fix(" ".join(copy.seo_title.split()).strip(" .\"«»")), product),
+        "seo_description": fix("\n\n".join(p.strip() for p in copy.seo_description.strip().split("\n\n") if p.strip())),
+        "search_queries": queries,  # запросы остаются строчными
+        "commercial": commercial,
     })
 
 
@@ -65,6 +73,10 @@ def review(copy: LLMCopy, checker: FactChecker, product: ProductInput, sparse: b
         problems.append(f"search_queries: {len(copy.search_queries)} шт., нужно от {QUERIES_MIN} до {QUERIES_MAX}")
     if not copy.commercial.who_for or not copy.commercial.tasks:
         problems.append("commercial: заполни who_for и tasks")
+    numbered = specs_in_audience(copy.commercial.who_for)
+    if numbered:
+        problems.append("commercial.who_for: характеристики вместо мест применения — "
+                        + "; ".join(f"«{x}»" for x in numbered) + ". Укажи объекты и системы, где применяется прибор, без чисел")
     roles = generic_audience(copy.commercial.who_for)
     if roles:
         problems.append("commercial.who_for: пункты из одних должностей, без объектов и сфер применения — "
@@ -81,12 +93,22 @@ def review(copy: LLMCopy, checker: FactChecker, product: ProductInput, sparse: b
         unknown = checker.check(text)
         if unknown:
             problems.append(f"{name}: значения, которых нет во входных данных — " + ", ".join(unknown))
+        if name in ("seo_description", "commercial"):
+            service = service_phrases(text)
+            if service:
+                problems.append(f"{name}: служебные обороты о данных вместо текста о приборе — "
+                                + ", ".join(f"«{x}»" for x in service)
+                                + ". Перепиши фразу о самом приборе; чего нет в данных — укажи в data_gaps")
         if name != "search_queries":
             words = evaluative_words(text, source)
             if words:
                 problems.append(f"{name}: оценочные слова без опоры на данные — " + ", ".join(words)
                                 + ". Убери их или замени фактом из данных")
 
+    odd = unnatural_queries(copy.search_queries)
+    if odd:
+        problems.append("search_queries: так в поиске не набирают (многоточие, градус, «±») — "
+                        + "; ".join(f"«{q}»" for q in odd))
     unrelated = irrelevant_queries(copy.search_queries, product)
     if unrelated:
         problems.append("search_queries: запросы не про этот товар (нет модели, типа прибора или "

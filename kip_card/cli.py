@@ -15,6 +15,7 @@ import glob
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 
 from .config import ConfigError, load_settings
@@ -81,7 +82,8 @@ def cmd_generate(args) -> int:
     code = _report_unmatched(unmatched)
     for path in files:
         label = "stdin" if path == "-" else path
-        print(f"→ {label}", file=sys.stderr)
+        print(f"→ {label}", file=sys.stderr, flush=True)
+        started = time.monotonic()
         try:
             card = generate_card(_read(path), llm, settings.max_repair_attempts, judge)
         except (OSError, InputError) as exc:
@@ -92,6 +94,7 @@ def cmd_generate(args) -> int:
             print(f"  Ошибка модели: {exc}", file=sys.stderr)
             return EXIT_LLM
 
+        elapsed = f"{time.monotonic() - started:.0f} с"
         markdown = to_markdown(card)
         as_json = card.model_dump_json(indent=2)
         if out_dir:
@@ -101,7 +104,7 @@ def cmd_generate(args) -> int:
             if args.format in ("json", "both"):
                 (out_dir / f"{stem}.json").write_text(as_json + "\n", encoding="utf-8")
             print(f"  {card.status} · попыток: {card.meta.attempts} · смысловая проверка: "
-                  f"{card.meta.judge_status} · сохранено в {out_dir / stem}.*", file=sys.stderr)
+                  f"{card.meta.judge_status} · {elapsed} · сохранено в {out_dir / stem}.*", file=sys.stderr)
         else:
             print(as_json if args.format == "json" else markdown)
     return code
@@ -210,6 +213,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        return _main(argv)
+    except KeyboardInterrupt:
+        print("\nОстановлено пользователем (Ctrl+C). Уже сохранённые карточки остались на месте.", file=sys.stderr)
+        return 130
+
+
+def _main(argv: list[str] | None) -> int:
     args = build_parser().parse_args(argv)
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING,
                         format="%(levelname)s %(name)s: %(message)s")

@@ -8,6 +8,8 @@
 Судья тоже модель и может ошибаться, поэтому:
 - он обязан приводить точную цитату из текста — код проверяет, что цитата там есть,
   и отбрасывает замечания с цитатой, которой нет (судья сам не «придумает» проблему);
+- замечание отбрасывается и тогда, когда цитата дословно есть во входных данных:
+  фраза из данных не может быть выдумкой;
 - судья не правит текст: его замечания уходят генератору в тот же цикл исправления,
   а то, что осталось, — предупреждением контент-менеджеру;
 - сбой судьи не ломает карточку: она выдаётся с предупреждением «проверка не выполнена».
@@ -50,7 +52,13 @@ JUDGE_PROMPT = """\
 Не считай проблемой:
 - пересказ своими словами без изменения смысла и границ;
 - другую запись того же значения (десятичная запятая или точка, пробелы, регистр);
-- общие слова о назначении, прямо следующие из данных.
+- общие слова о назначении, прямо следующие из данных;
+- сферы применения, объекты и примеры использования, которые названы в данных — \
+в том числе через «можно», «позволяет», «применяется»: это данные, а не усиление;
+- пропуск сведений: если в тексте чего-то из данных нет, это не ошибка.
+
+Перед каждым замечанием сверь фразу с данными: если там сказано то же самое (пусть \
+другими словами или в другой грамматической форме), замечание не нужно.
 
 Для каждой проблемы верни:
 - field — поле: seo_title, seo_description, search_queries или commercial;
@@ -153,10 +161,20 @@ class Judge:
         except ValidationError as exc:
             raise LLMResponseError("Ответ смысловой проверки не соответствует схеме", raw) from exc
 
+        source = _source_text(product)
         findings: list[Finding] = []
         for finding in report.issues:
-            if quote_found(finding.quote, texts[finding.field]):
-                findings.append(finding)
-            else:
+            if not quote_found(finding.quote, texts[finding.field]):
                 log.info("Судья: цитата не найдена в %s, замечание отброшено: %r", finding.field, finding.quote)
+            elif quote_found(finding.quote, source):
+                log.info("Судья: цитата дословно есть во входных данных, замечание отброшено: %r", finding.quote)
+            else:
+                findings.append(finding)
         return findings[:MAX_FINDINGS]
+
+
+def _source_text(product: ProductInput) -> str:
+    parts = [product.name, product.product_type, product.manufacturer, product.category, product.description]
+    for key, value in product.specs.items():
+        parts.append(f"{key}: {value}")
+    return "\n".join(p for p in parts if p)

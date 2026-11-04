@@ -8,6 +8,14 @@
 Второй прогон добавил:
 - повтор производителя в заголовке («testo 830-T1 Testo») — убираем сами;
 - «Кому подходит» из одних должностей («технические специалисты», «снабженцы») — переспрашиваем.
+
+Сравнение моделей (gpt-5.4-mini, Qwen) добавило:
+- бренд и модель строчными, когда модель вставляет в текст поисковый запрос
+  («овен пд100-…») — возвращаем написание из данных сами;
+- служебные обороты о данных вместо текста о приборе («по данным карточки»,
+  «этот прибор ищут как») — переспрашиваем;
+- запросы с многоточиями и знаками градуса — переспрашиваем;
+- характеристики и числа в «Кому подходит» — переспрашиваем.
 """
 
 from __future__ import annotations
@@ -127,3 +135,84 @@ def generic_audience(who_for: list[str]) -> list[str]:
         if words and all(any(w.startswith(stem) for stem in _ROLE_STEMS) for w in words):
             bad.append(item)
     return bad
+
+
+# ------------------------------------------------------------------ написание бренда и модели
+
+
+def _case_map(product: ProductInput) -> dict[str, str]:
+    """Строчная форма → написание из данных.
+
+    Производитель — всегда (это бренд). Из названия — только слова с цифрами или целиком
+    заглавные (ПД100-ДИ1,6-111-0,5, DM): обычные слова вроде «Манометр» не трогаем.
+    Если в названии бренд пишется строчными (testo), побеждает написание из названия.
+    """
+    mapping: dict[str, str] = {}
+    for token in product.manufacturer.split():
+        token = token.strip(".,;:()«»\"")
+        if len(token) >= 2:
+            mapping[token.lower()] = token
+    for token in product.name.split():
+        token = token.strip(".,;:()«»\"")
+        if len(token) < 2:
+            continue
+        if token == token.lower():
+            mapping[token] = token  # написание производителя строчными — сохранить
+        elif any(ch.isdigit() for ch in token) or token == token.upper():
+            mapping[token.lower()] = token
+    return {low: canon for low, canon in mapping.items() if low != canon}
+
+
+def restore_case(text: str, product: ProductInput) -> str:
+    """«датчик давления овен пд100-ди1,6-111-0,5» → «датчик давления ОВЕН ПД100-ДИ1,6-111-0,5».
+
+    Заменяются только вхождения, написанные целиком строчными.
+    """
+    for low, canon in _case_map(product).items():
+        pattern = re.compile(rf"(?<![\w-]){re.escape(low)}(?![\w-])", re.IGNORECASE)
+        text = pattern.sub(lambda m: canon if m.group() == m.group().lower() else m.group(), text)
+    return text
+
+
+# ------------------------------------------------------------------ служебные обороты
+
+_SERVICE_PATTERNS = [
+    re.compile(p, re.IGNORECASE) for p in (
+        r"\bпо данным\b",
+        r"\bпо описанию\b",
+        r"\bв описании\b",
+        r"\bв карточк\w*",
+        r"\bвходн\w* данн\w*",
+        r"\bищут как\b",
+        r"\bв (?:поисковых )?запросах\b",
+        r"\bуказанн\w* характеристик\w*",
+        r"\bхарактеристики\b[^.]{0,60}?\bвключа\w*",
+        r"\bне (?:указан|приведен)\w*",
+    )
+]
+
+
+def service_phrases(text: str) -> list[str]:
+    """Обороты о данных и карточке вместо текста о приборе («по данным карточки…»)."""
+    plain = text.replace("ё", "е")
+    found = []
+    for pattern in _SERVICE_PATTERNS:
+        match = pattern.search(plain)
+        if match:
+            found.append(match.group())
+    return found
+
+
+# ------------------------------------------------------------------ запросы и «Кому подходит»
+
+_QUERY_SYMBOLS = ("…", "...", "°", "±")
+
+
+def unnatural_queries(queries: list[str]) -> list[str]:
+    """Запросы с многоточием, знаком градуса или «±» — так в поиске не набирают."""
+    return [q for q in queries if any(sym in q for sym in _QUERY_SYMBOLS)]
+
+
+def specs_in_audience(who_for: list[str]) -> list[str]:
+    """Пункты «Кому подходит» с числами — это характеристики, а не места применения."""
+    return [item for item in who_for if re.search(r"\d", item)]

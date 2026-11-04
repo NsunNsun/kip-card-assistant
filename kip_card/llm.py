@@ -7,6 +7,10 @@
 json_schema (строгая схема) → json_object (просто JSON) → prompt (JSON по инструкции).
 Режим «auto» сам спускается по этой лестнице, если сервер или модель не поддерживает
 более строгий вариант, и запоминает рабочий режим.
+
+Рассуждающие модели (gpt-5.x и др.) часто не принимают temperature, а OpenRouter
+с require_parameters из-за этого отклоняет и строгую схему. Поэтому перед спуском
+со строгой схемы клиент один раз повторяет её без temperature.
 """
 
 from __future__ import annotations
@@ -164,13 +168,13 @@ class OpenAICompatibleLLM:
         fmt = settings.response_format
         self._modes = list(MODES) if fmt == "auto" else [fmt]
         self.mode = self._modes[0]
+        self._send_temperature = True
+        self._tried_without_temperature = False
 
     def _request(self, messages: list[dict], mode: str, spec: ResponseSchema):
-        kwargs: dict = {
-            "model": self.settings.model,
-            "messages": messages,
-            "temperature": self.settings.temperature,
-        }
+        kwargs: dict = {"model": self.settings.model, "messages": messages}
+        if self._send_temperature:
+            kwargs["temperature"] = self.settings.temperature
         if mode == "json_schema":
             kwargs["response_format"] = {
                 "type": "json_schema",
@@ -195,10 +199,17 @@ class OpenAICompatibleLLM:
             try:
                 response = self._request(messages, mode, spec)
             except openai.APIError as exc:
+                if _is_format_unsupported(exc) and mode == "json_schema" and not self._tried_without_temperature:
+                    log.warning("Строгая схема отклонена (%s), повторяю без temperature", exc)
+                    self._tried_without_temperature = True
+                    self._send_temperature = False
+                    last_exc = exc
+                    continue
                 if _is_format_unsupported(exc) and len(self._modes) > 1:
                     log.warning("Режим %s не поддерживается (%s), пробую следующий", mode, exc)
                     self._modes.pop(0)
                     self.mode = self._modes[0]
+                    self._send_temperature = True  # схема не поддерживается сама по себе
                     last_exc = exc
                     continue
                 raise _human_error(exc, self.settings) from exc

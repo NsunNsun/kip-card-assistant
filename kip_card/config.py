@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_MODEL = "openai/gpt-4o-mini"
+DEFAULT_MODEL = "qwen/qwen3.8-27b"
 RESPONSE_FORMATS = ("auto", "json_schema", "json_object", "prompt")
 _ON = {"on", "1", "true", "yes", "да"}
 _OFF = {"off", "0", "false", "no", "нет"}

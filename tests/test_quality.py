@@ -14,7 +14,7 @@ import pytest
 from kip_card.factcheck import FactChecker
 from kip_card.generator import _normalize, _source_texts, generate_card, review
 from kip_card.models import LLMCopy, ProductInput
-from kip_card.prompts import SYSTEM_PROMPT
+from kip_card.prompts import PROMPT_VERSION, SYSTEM_PROMPT
 from kip_card.quality import evaluative_words, fix_title, generic_audience, irrelevant_queries
 from kip_card.validation import parse_input
 
@@ -141,7 +141,7 @@ def test_sparse_input_does_not_demand_800_chars(manometer_raw):
     assert "ДАННЫХ МАЛО" in llm.calls[0][1]["content"]
     assert any(i.field == "seo_description" and "мало сведений" in i.message for i in card.issues)
     assert card.status == "needs_review"
-    assert card.meta.prompt_version == 3
+    assert card.meta.prompt_version == PROMPT_VERSION
 
 
 def test_rich_input_still_requires_800_chars(testo_raw):
